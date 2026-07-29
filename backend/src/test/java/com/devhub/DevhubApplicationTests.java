@@ -1,21 +1,13 @@
 package com.devhub;
 
+import com.devhub.support.AbstractIntegrationTest;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 
-@SpringBootTest
-@Testcontainers
-class DevhubApplicationTests {
-
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:18.4");
+class DevhubApplicationTests extends AbstractIntegrationTest {
 
     @Test
+    @DisplayName("애플리케이션 컨텍스트가 로딩된다")
     void contextLoads() {
     }
 }
