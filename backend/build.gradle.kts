@@ -33,6 +33,11 @@ dependencies {
     // RSS/Atom 파싱
     implementation("com.rometools:rome:2.1.0")
 
+    compileOnly(platform(SpringBootPlugin.BOM_COORDINATES))
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor(platform(SpringBootPlugin.BOM_COORDINATES))
+    annotationProcessor("org.projectlombok:lombok")
+
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.testcontainers:testcontainers-junit-jupiter")
