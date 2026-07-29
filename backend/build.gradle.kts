@@ -32,6 +32,7 @@ dependencies {
 
     // RSS/Atom 파싱
     implementation("com.rometools:rome:2.1.0")
+    implementation("org.jsoup:jsoup:1.22.2")
 
     compileOnly(platform(SpringBootPlugin.BOM_COORDINATES))
     compileOnly("org.projectlombok:lombok")
