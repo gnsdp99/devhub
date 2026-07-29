@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: devhub
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/devhub}
+    username: ${SPRING_DATASOURCE_USERNAME:devhub}
+    password: ${SPRING_DATASOURCE_PASSWORD:devhub}
+  flyway:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
