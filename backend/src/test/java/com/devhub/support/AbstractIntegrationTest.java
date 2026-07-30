@@ -26,4 +26,8 @@ public abstract class AbstractIntegrationTest {
     protected long count(String sql) {
         return jdbcClient.sql(sql).query(Long.class).single();
     }
+
+    protected void update(String sql) {
+        jdbcClient.sql(sql).update();
+    }
 }
