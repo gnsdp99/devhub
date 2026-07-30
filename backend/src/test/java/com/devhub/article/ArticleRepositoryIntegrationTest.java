@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 @Transactional
-class ArticleRepositoryTest extends AbstractIntegrationTest {
+class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
 
     private static final Instant PUBLISHED_AT = Instant.parse("2026-07-20T12:00:00Z");
     private static final String URL = "https://blog.cloudflare.com/how-we-scaled-workers";

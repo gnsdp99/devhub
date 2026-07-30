@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 
-class FeedParserTest {
+class FeedParserUnitTest {
 
     private static final Instant NOW = Instant.parse("2026-07-30T00:00:00Z");
 
