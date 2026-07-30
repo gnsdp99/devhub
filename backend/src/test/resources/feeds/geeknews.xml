@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns='http://www.w3.org/2005/Atom'>
+<title>GeekNews - 개발/기술/스타트업 뉴스 서비스</title>
+<subtitle>개발 뉴스, 기술 관련 새소식, 스타트업 정보와 노하우, 세상의 재미난 것들을 좋아하는 사람들을 위한 뉴스 사이트. 이메일 뉴스레터/X(Twitter)/Slack용 봇으로 구독 가능</subtitle>
+<link rel='alternate' type='text/html' href='https://news.hada.io' />
+<link rel='self' type='application/atom+xml' href='https://news.hada.io/rss/news' />
+<id>https://news.hada.io/rss/news</id>
+<author>
+<name>GeekNews</name>
+<email>news@hada.io</email>
+<uri>https://news.hada.io</uri>
+</author>
+<updated>2026-07-29T17:33:31+09:00</updated>
+<icon>https://social.news.hada.io/favicon.png</icon>
+<logo>https://social.news.hada.io/WideLogo500.png</logo>
+<category term='technology'/>
+<entry>
+  <title><![CDATA[Delayed Gratification – ‘속보에 가장 늦는 것’을 자랑하는 잡지]]></title>
+  <link rel='alternate' type='text/html' href='https://news.hada.io/topic?id=31947' />
+  <id>https://news.hada.io/topic?id=31947</id>
+  <updated>2026-07-29T17:33:31+09:00</updated>
+  <published>2026-07-29T17:33:31+09:00</published>
+  <author>
+    <name>neo</name>
+    <uri>https://news.hada.io/user/neo</uri>
+  </author>
+  <content type='html' xml:lang='ko'><![CDATA[<ul>
+<li>세계 최초의 Slow News 계간지 <strong>Delayed Gratification</strong>은 지난 3개월의 사건을 되짚어 심층적이고 독립적인 저널리즘을 제공함</li>
+<li>속보 경쟁 대신 사건이 전개될 시간을 두고 다시 살펴보는 <strong>슬로 저널리즘(Slow Journalism)</strong> 을 지향함</li>
+<li>2011년부터 ‘<strong>L...</p>]]></content>
+</entry><entry>
+  <title><![CDATA[Ask GN: MCP 도구를 여러 개 붙여 에이전트를 운영하시는 분들 중 중복 실행 겪어보신분 계실까요?]]></title>
+  <link rel='alternate' type='text/html' href='https://news.hada.io/topic?id=31946' />
+  <id>https://news.hada.io/topic?id=31946</id>
+  <updated>2026-07-29T16:35:55+09:00</updated>
+  <published>2026-07-29T16:35:55+09:00</published>
+  <author>
+    <name>qlcla123</name>
+    <uri>https://news.hada.io/user/qlcla123</uri>
+  </author>
+  <content type='html' xml:lang='ko'><![CDATA[<p>공개 벤치마크 트레이스에서 에이전트의 중복 실행을 측정해봤습니다. 같은 도구를 같은 인자로 두 번 호출하고 결과까지 같은 경우를 세는 방식입니다.</p>
+<p>6,780개 트레이스에서 8,042건이 나왔는데, 절반 가까이는 작업 완료 선언 반복 같은 것 빼면 4,249건이었습니다. 그중 상태를 변경하는 도구의 중복 호출]]></content>
+</entry><entry>
+  <title><![CDATA[웹서비스 개발 시 고려해야 법률 및 아키텍처 가이드]]></title>
+  <link rel='alternate' type='text/html' href='https://news.hada.io/topic?id=31945' />
+  <id>https://news.hada.io/topic?id=31945</id>
+  <updated>2026-07-29T16:34:05+09:00</updated>
+  <published>2026-07-29T16:34:05+09:00</published>
+  <author>
+    <name>jic5760</name>
+    <uri>https://news.hada.io/user/jic5760</uri>
+  </author>
+  <content type='html' xml:lang='ko'><![CDATA[<p>legalize-kr 을 보고 생각난게, AI 을 통해서 웹 서비스 개발에 대한 가이드를 작성할 수 있지 않을까? 생각이 들어 작성해 보았습니다.</p>
+<p>본 내용은 Claude Code + Opus 5 을 사용했습니다. AI Generated 인 만큼 틀린 내용이 있을 수 있으니 맹신하지 말고 참고만 하세요. 고려해야 하지만 빠진 법률들이 있을]]></content>
+</entry></feed>

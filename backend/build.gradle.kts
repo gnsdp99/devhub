@@ -23,6 +23,7 @@ dependencies {
     implementation(platform(SpringBootPlugin.BOM_COORDINATES))
 
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-restclient")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
@@ -32,6 +33,12 @@ dependencies {
 
     // RSS/Atom 파싱
     implementation("com.rometools:rome:2.1.0")
+    implementation("org.jsoup:jsoup:1.22.2")
+
+    compileOnly(platform(SpringBootPlugin.BOM_COORDINATES))
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor(platform(SpringBootPlugin.BOM_COORDINATES))
+    annotationProcessor("org.projectlombok:lombok")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
