@@ -17,7 +17,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestClient;
 
-class FeedFetcherTest {
+class FeedFetcherIntegrationTest {
 
     private static final String FEED_BODY = "<rss version=\"2.0\"><channel/></rss>";
 

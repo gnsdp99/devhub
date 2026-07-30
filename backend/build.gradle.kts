@@ -50,3 +50,15 @@ dependencies {
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+
+fun registerTestTask(name: String, pattern: String, summary: String) =
+    tasks.register<Test>(name) {
+        group = LifecycleBasePlugin.VERIFICATION_GROUP
+        description = summary
+        testClassesDirs = sourceSets.test.get().output.classesDirs
+        classpath = sourceSets.test.get().runtimeClasspath
+        filter { includeTestsMatching(pattern) }
+    }
+
+registerTestTask("unitTest", "*UnitTest*", "모든 단위 테스트 실행한다.")
+registerTestTask("integrationTest", "*IntegrationTest*", "모든 통합 테스트를 실행한다.")

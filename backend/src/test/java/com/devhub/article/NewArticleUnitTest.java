@@ -8,7 +8,7 @@ import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-class NewArticleTest {
+class NewArticleUnitTest {
 
     private static final Instant PUBLISHED_AT = Instant.parse("2026-07-20T12:00:00Z");
 

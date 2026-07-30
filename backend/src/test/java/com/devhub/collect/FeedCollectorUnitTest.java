@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.dao.DataAccessResourceFailureException;
 
-class FeedCollectorTest {
+class FeedCollectorUnitTest {
 
     private static final Instant NOW = Instant.parse("2026-07-30T00:00:00Z");
     private static final Duration WINDOW = Duration.ofDays(30);

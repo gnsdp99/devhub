@@ -11,7 +11,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-class UrlNormalizerTest {
+class UrlNormalizerUnitTest {
 
     @Nested
     @DisplayName("같은 기사로 합쳐지는 경우")

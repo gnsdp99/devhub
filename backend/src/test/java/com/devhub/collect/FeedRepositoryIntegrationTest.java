@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 @Transactional
-class FeedRepositoryTest extends AbstractIntegrationTest {
+class FeedRepositoryIntegrationTest extends AbstractIntegrationTest {
 
     private static final String LAST_MODIFIED = "Wed, 29 Jul 2026 07:18:24 GMT";
 

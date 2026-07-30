@@ -6,7 +6,7 @@ import com.devhub.support.AbstractIntegrationTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-class SourceSeedTest extends AbstractIntegrationTest {
+class SourceSeedIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("시드가 큐레이션한 소스 21개와 피드 26개를 모두 넣는다")
