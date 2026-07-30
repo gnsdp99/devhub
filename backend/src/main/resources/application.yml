@@ -11,6 +11,12 @@ spring:
   flyway:
     enabled: true
 
+devhub:
+  collect:
+    enabled: ${DEVHUB_COLLECT_ENABLED:false}
+    interval: ${DEVHUB_COLLECT_INTERVAL:PT30M}
+    window: ${DEVHUB_COLLECT_WINDOW:P30D}
+
 management:
   endpoints:
     web:
