@@ -5,13 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.devhub.support.AbstractIntegrationTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.simple.JdbcClient;
 
 class SourceSeedTest extends AbstractIntegrationTest {
-
-    @Autowired
-    private JdbcClient jdbcClient;
 
     @Test
     @DisplayName("시드가 큐레이션한 소스 21개와 피드 26개를 모두 넣는다")
@@ -60,9 +55,5 @@ class SourceSeedTest extends AbstractIntegrationTest {
                 .param("slug", sourceSlug)
                 .query(Long.class)
                 .single();
-    }
-
-    private long count(String sql) {
-        return jdbcClient.sql(sql).query(Long.class).single();
     }
 }
