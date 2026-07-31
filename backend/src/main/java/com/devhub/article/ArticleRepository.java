@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.jdbc.core.simple.JdbcClient.StatementSpec;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -24,7 +26,37 @@ public class ArticleRepository {
             on conflict (url_hash) do nothing
             """;
 
+    private static final String SELECT_SQL = """
+            select a.id, a.title, a.url, a.summary, a.published_at,
+                   f.slug as feed, s.slug as source, s.name as source_name
+              from article a
+              join feed f on f.id = a.feed_id
+              join source s on s.id = a.source_id
+            %s
+             order by a.published_at desc, a.id desc
+             limit :limit
+            """;
+
+    private static final String CURSOR_CONDITION =
+            " where (a.published_at, a.id) < (:publishedAt, :id)";
+
     private final NamedParameterJdbcTemplate jdbcTemplate;
+    private final JdbcClient jdbcClient;
+
+    /**
+     * @param cursor 이 커서보다 오래된 기사만 가져온다. 첫 페이지면 null
+     */
+    public List<Article> findPage(ArticleCursor cursor, int limit) {
+        StatementSpec statement = jdbcClient
+                .sql(SELECT_SQL.formatted(cursor == null ? "" : CURSOR_CONDITION))
+                .param("limit", limit);
+        if (cursor != null) {
+            statement = statement
+                    .param("publishedAt", toColumnValue(cursor.publishedAt()))
+                    .param("id", cursor.id());
+        }
+        return statement.query(Article.class).list();
+    }
 
     /**
      * @return 새로 저장한 건수. 이미 있던 기사는 세지 않는다.
