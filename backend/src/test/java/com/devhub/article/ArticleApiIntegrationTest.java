@@ -2,39 +2,24 @@ package com.devhub.article;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.devhub.support.AbstractIntegrationTest;
+import com.devhub.support.AbstractApiIntegrationTest;
 import java.time.Instant;
 import java.util.List;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatus;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.transaction.annotation.Transactional;
 
 @Transactional
-@AutoConfigureMockMvc
-class ArticleApiIntegrationTest extends AbstractIntegrationTest {
+class ArticleApiIntegrationTest extends AbstractApiIntegrationTest {
 
     private static final Instant PUBLISHED_AT = Instant.parse("2026-07-20T12:00:00Z");
     private static final String NEW_URL = "https://example.com/new";
     private static final String OLD_URL = "https://example.com/old";
 
     @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
     private ArticleRepository repository;
-
-    private MockMvcTester mvc;
-
-    @BeforeEach
-    void setUp() {
-        mvc = MockMvcTester.create(mockMvc);
-    }
 
     @Test
     @DisplayName("기사 목록을 최근 발행 순으로 돌려준다")

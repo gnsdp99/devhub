@@ -6,7 +6,6 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
@@ -20,29 +19,40 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessResourceFailureException;
 
+@ExtendWith(MockitoExtension.class)
 class FeedCollectorUnitTest {
 
     private static final Instant NOW = Instant.parse("2026-07-30T00:00:00Z");
     private static final Duration WINDOW = Duration.ofDays(30);
     private static final byte[] BODY = "<rss/>".getBytes();
 
-    private final FeedRepository feedRepository = mock(FeedRepository.class);
-    private final ArticleRepository articleRepository = mock(ArticleRepository.class);
-    private final FeedFetcher fetcher = mock(FeedFetcher.class);
-    private final FeedParser parser = mock(FeedParser.class);
+    @Mock
+    private FeedRepository feedRepository;
 
-    private final FeedCollector collector = new FeedCollector(
-            feedRepository,
-            articleRepository,
-            fetcher,
-            parser,
-            CollectPropertiesFixture.of(WINDOW),
-            Clock.fixed(NOW, ZoneOffset.UTC));
+    @Mock
+    private ArticleRepository articleRepository;
+
+    @Mock
+    private FeedFetcher fetcher;
+
+    @Mock
+    private FeedParser parser;
+
+    private FeedCollector collector;
+
+    @BeforeEach
+    void setUp() {
+        collector = collectorWith(CollectPropertiesFixture.of(WINDOW));
+    }
 
     @Test
     @DisplayName("한 피드가 실패해도 나머지 피드는 수집한다")
@@ -164,12 +174,16 @@ class FeedCollectorUnitTest {
     }
 
     private FeedCollector collectorWith(int concurrency) {
+        return collectorWith(CollectPropertiesFixture.of(WINDOW, concurrency));
+    }
+
+    private FeedCollector collectorWith(CollectProperties properties) {
         return new FeedCollector(
                 feedRepository,
                 articleRepository,
                 fetcher,
                 parser,
-                CollectPropertiesFixture.of(WINDOW, concurrency),
+                properties,
                 Clock.fixed(NOW, ZoneOffset.UTC));
     }
 

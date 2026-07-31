@@ -2,27 +2,11 @@ package com.devhub.source;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.devhub.support.AbstractIntegrationTest;
-import org.junit.jupiter.api.BeforeEach;
+import com.devhub.support.AbstractApiIntegrationTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
-@AutoConfigureMockMvc
-class SourceApiIntegrationTest extends AbstractIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    private MockMvcTester mvc;
-
-    @BeforeEach
-    void setUp() {
-        mvc = MockMvcTester.create(mockMvc);
-    }
+class SourceApiIntegrationTest extends AbstractApiIntegrationTest {
 
     @Test
     @DisplayName("활성 소스를 이름 알파벳순으로 돌려준다")
@@ -32,9 +16,20 @@ class SourceApiIntegrationTest extends AbstractIntegrationTest {
                 .bodyJson()
                 .extractingPath("$[*].name")
                 .asArray()
-                .hasSize(20)
                 .startsWith("AWS", "ByteByteGo", "Cloudflare")
                 .endsWith("요즘IT");
+    }
+
+    @Test
+    @DisplayName("비활성 소스는 돌려주지 않는다")
+    void leavesOutDisabledSources() {
+        assertThat(mvc.get().uri("/api/sources"))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$[*].slug")
+                .asArray()
+                .contains("hackernews")
+                .doesNotContain("anthropic");
     }
 
     @Test

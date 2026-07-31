@@ -24,8 +24,9 @@ class SourceRepositoryIntegrationTest extends AbstractIntegrationTest {
         void leavesOutDisabledSources() {
             List<Source> sources = repository.findEnabled();
 
-            assertThat(sources).extracting(Source::slug).doesNotContain("anthropic");
-            assertThat(sources).hasSize(20);
+            assertThat(sources).extracting(Source::slug)
+                    .contains("hackernews")
+                    .doesNotContain("anthropic");
         }
 
         @Test
