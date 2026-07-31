@@ -21,21 +21,22 @@ public class FeedFetcher {
 
     private static final String USER_AGENT =
             "devhub-feed-collector/1.0 (+https://github.com/gnsdp99/devhub)";
-    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
-    private static final Duration READ_TIMEOUT = Duration.ofSeconds(10);
-    private static final int MAX_BODY_BYTES = 10 * 1024 * 1024;
-    private static final int MAX_REDIRECTS = 5;
 
     private final RestClient restClient;
     private final FeedAddressPolicy addressPolicy;
+    private final CollectProperties.Http http;
 
-    public FeedFetcher(RestClient.Builder builder, FeedAddressPolicy addressPolicy) {
+    public FeedFetcher(
+            RestClient.Builder builder,
+            FeedAddressPolicy addressPolicy,
+            CollectProperties properties) {
+        this.http = properties.http();
         HttpClient httpClient = HttpClient.newBuilder()
-                .connectTimeout(CONNECT_TIMEOUT)
+                .connectTimeout(http.connectTimeout())
                 .followRedirects(HttpClient.Redirect.NEVER)
                 .build();
         JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
-        requestFactory.setReadTimeout(READ_TIMEOUT);
+        requestFactory.setReadTimeout(http.readTimeout());
         this.restClient = builder.requestFactory(requestFactory).build();
         this.addressPolicy = addressPolicy;
     }
@@ -45,7 +46,7 @@ public class FeedFetcher {
      */
     public FetchResult fetch(String feedUrl, String etag, String lastModified) {
         URI uri = uriOf(feedUrl);
-        for (int hop = 0; hop <= MAX_REDIRECTS; hop++) {
+        for (int hop = 0; hop <= http.maxRedirects(); hop++) {
             addressPolicy.check(uri);
             Hop result = exchange(uri, etag, lastModified);
             if (result.fetched() != null) {
@@ -53,7 +54,7 @@ public class FeedFetcher {
             }
             uri = uri.resolve(result.location());
         }
-        throw new FeedFetchException("리다이렉트가 " + MAX_REDIRECTS + "회를 넘습니다: " + feedUrl);
+        throw new FeedFetchException("리다이렉트가 " + http.maxRedirects() + "회를 넘습니다: " + feedUrl);
     }
 
     private URI uriOf(String feedUrl) {
@@ -114,12 +115,13 @@ public class FeedFetcher {
     private byte[] readBody(URI uri, ClientHttpResponse response) throws IOException {
         boolean gzipped = "gzip".equalsIgnoreCase(
                 response.getHeaders().getFirst(HttpHeaders.CONTENT_ENCODING));
+        int maxBodyBytes = Math.toIntExact(http.maxBodySize().toBytes());
         try (InputStream body = response.getBody();
                 InputStream stream = gzipped ? new GZIPInputStream(body) : body) {
-            byte[] read = stream.readNBytes(MAX_BODY_BYTES + 1);
-            if (read.length > MAX_BODY_BYTES) {
+            byte[] read = stream.readNBytes(maxBodyBytes + 1);
+            if (read.length > maxBodyBytes) {
                 throw new FeedFetchException(
-                        "피드 본문이 " + MAX_BODY_BYTES + "바이트를 넘습니다: " + uri);
+                        "피드 본문이 " + maxBodyBytes + "바이트를 넘습니다: " + uri);
             }
             return read;
         }

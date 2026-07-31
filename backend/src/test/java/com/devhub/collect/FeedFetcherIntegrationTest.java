@@ -4,6 +4,7 @@ import static com.devhub.support.StubHttpServer.respond;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.devhub.support.CollectPropertiesFixture;
 import com.devhub.support.StubHttpServer;
 import com.devhub.support.TestAddressPolicyConfig;
 import com.sun.net.httpserver.Headers;
@@ -11,11 +12,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.GZIPOutputStream;
+import org.springframework.util.unit.DataSize;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,7 +29,17 @@ class FeedFetcherIntegrationTest {
 
     private static final String FEED_BODY = "<rss version=\"2.0\"><channel/></rss>";
 
-    private final FeedFetcher fetcher = new FeedFetcher(RestClient.builder(), TestAddressPolicyConfig.ALLOW_ALL);
+    private static final DataSize MAX_BODY_SIZE = DataSize.ofKilobytes(64);
+
+    private final FeedFetcher fetcher = fetcherWith(TestAddressPolicyConfig.ALLOW_ALL);
+
+    private static FeedFetcher fetcherWith(FeedAddressPolicy addressPolicy) {
+        return new FeedFetcher(
+                RestClient.builder(),
+                addressPolicy,
+                CollectPropertiesFixture.of(new CollectProperties.Http(
+                        Duration.ofSeconds(5), Duration.ofSeconds(10), MAX_BODY_SIZE, 5)));
+    }
 
     private StubHttpServer server;
 
@@ -158,7 +171,7 @@ class FeedFetcherIntegrationTest {
     void failsOnOversizedBody() {
         String url = server.serve("/feed", exchange -> {
             exchange.getResponseHeaders().set("Content-Encoding", "gzip");
-            respond(exchange, 200, gzip(new byte[11 * 1024 * 1024]));
+            respond(exchange, 200, gzip(new byte[(int) MAX_BODY_SIZE.toBytes() + 1]));
         });
 
         assertThatThrownBy(() -> fetcher.fetch(url, null, null))
@@ -205,7 +218,7 @@ class FeedFetcherIntegrationTest {
             respond(exchange, 301, new byte[0]);
         });
 
-        new FeedFetcher(RestClient.builder(), checked::add).fetch(url, null, null);
+        fetcherWith(checked::add).fetch(url, null, null);
 
         assertThat(checked).extracting(URI::getPath).containsExactly("/feed", "/moved");
     }
@@ -218,7 +231,7 @@ class FeedFetcherIntegrationTest {
             requested.set(true);
             respond(exchange, 200, utf8(FEED_BODY));
         });
-        FeedFetcher blocked = new FeedFetcher(RestClient.builder(), uri -> {
+        FeedFetcher blocked = fetcherWith(uri -> {
             throw new FeedFetchException("내부 주소로는 요청하지 않습니다: " + uri);
         });
 

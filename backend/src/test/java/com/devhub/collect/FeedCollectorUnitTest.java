@@ -12,11 +12,14 @@ import static org.mockito.Mockito.times;
 
 import com.devhub.article.ArticleRepository;
 import com.devhub.article.NewArticle;
+import com.devhub.support.CollectPropertiesFixture;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -38,7 +41,7 @@ class FeedCollectorUnitTest {
             articleRepository,
             fetcher,
             parser,
-            new CollectProperties(WINDOW),
+            CollectPropertiesFixture.of(WINDOW),
             Clock.fixed(NOW, ZoneOffset.UTC));
 
     @Test
@@ -136,6 +139,38 @@ class FeedCollectorUnitTest {
         collector.collect();
 
         assertThat(storedUrls()).containsExactly("https://example.com/a");
+    }
+
+    @Test
+    @DisplayName("동시에 가져오는 피드 수가 상한을 넘지 않는다")
+    void fetchesNoMoreFeedsAtOnceThanTheLimit() {
+        int concurrency = 2;
+        Feed[] feeds = IntStream.rangeClosed(1, 10)
+                .mapToObj(i -> feed(i, "feed-" + i))
+                .toArray(Feed[]::new);
+        givenCollectible(feeds);
+        AtomicInteger inFlight = new AtomicInteger();
+        AtomicInteger peak = new AtomicInteger();
+        given(fetcher.fetch(any(), any(), any())).willAnswer(invocation -> {
+            peak.accumulateAndGet(inFlight.incrementAndGet(), Math::max);
+            Thread.sleep(20);
+            inFlight.decrementAndGet();
+            return new FetchResult.NotModified();
+        });
+
+        collectorWith(concurrency).collect();
+
+        assertThat(peak.get()).isLessThanOrEqualTo(concurrency);
+    }
+
+    private FeedCollector collectorWith(int concurrency) {
+        return new FeedCollector(
+                feedRepository,
+                articleRepository,
+                fetcher,
+                parser,
+                CollectPropertiesFixture.of(WINDOW, concurrency),
+                Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
     private void givenCollectible(Feed... feeds) {

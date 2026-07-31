@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -27,8 +28,23 @@ public class FeedCollector {
     public void collect() {
         List<Feed> feeds = feedRepository.findCollectible();
         log.info("피드 {}개를 수집합니다.", feeds.size());
+        Semaphore permits = new Semaphore(properties.concurrency());
         try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
-            feeds.forEach(feed -> executor.execute(() -> collectOne(feed)));
+            feeds.forEach(feed -> executor.execute(() -> collectWithin(permits, feed)));
+        }
+    }
+
+    private void collectWithin(Semaphore permits, Feed feed) {
+        try {
+            permits.acquire();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return;
+        }
+        try {
+            collectOne(feed);
+        } finally {
+            permits.release();
         }
     }
 

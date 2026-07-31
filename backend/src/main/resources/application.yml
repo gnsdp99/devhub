@@ -16,6 +16,12 @@ devhub:
     enabled: ${DEVHUB_COLLECT_ENABLED:false}
     interval: ${DEVHUB_COLLECT_INTERVAL:PT30M}
     window: ${DEVHUB_COLLECT_WINDOW:P30D}
+    concurrency: ${DEVHUB_COLLECT_CONCURRENCY:8}
+    http:
+      connect-timeout: ${DEVHUB_COLLECT_HTTP_CONNECT_TIMEOUT:5s}
+      read-timeout: ${DEVHUB_COLLECT_HTTP_READ_TIMEOUT:10s}
+      max-body-size: ${DEVHUB_COLLECT_HTTP_MAX_BODY_SIZE:10MB}
+      max-redirects: ${DEVHUB_COLLECT_HTTP_MAX_REDIRECTS:5}
 
 management:
   endpoints:
