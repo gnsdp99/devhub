@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +12,6 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.JdbcClient;
-import org.springframework.jdbc.core.simple.JdbcClient.StatementSpec;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -39,28 +39,9 @@ public class ArticleRepository {
              limit :limit
             """;
 
-    private static final String CURSOR_WHERE_SQL = """
-             where (a.published_at, a.id) < (:publishedAt, :id)
-            """;
+    private static final String SOURCE_CONDITION = "a.source_id = :sourceId";
 
-    private static final String SOURCE_WHERE_SQL = """
-             where a.source_id = :sourceId
-            """;
-
-    private static final String SOURCE_AND_CURSOR_WHERE_SQL = """
-             where a.source_id = :sourceId
-               and (a.published_at, a.id) < (:publishedAt, :id)
-            """;
-
-    private static final String FIRST_PAGE_SQL = SELECT_SQL + ORDER_AND_LIMIT_SQL;
-
-    private static final String NEXT_PAGE_SQL = SELECT_SQL + CURSOR_WHERE_SQL + ORDER_AND_LIMIT_SQL;
-
-    private static final String FIRST_PAGE_BY_SOURCE_SQL =
-            SELECT_SQL + SOURCE_WHERE_SQL + ORDER_AND_LIMIT_SQL;
-
-    private static final String NEXT_PAGE_BY_SOURCE_SQL =
-            SELECT_SQL + SOURCE_AND_CURSOR_WHERE_SQL + ORDER_AND_LIMIT_SQL;
+    private static final String CURSOR_CONDITION = "(a.published_at, a.id) < (:publishedAt, :id)";
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
     private final JdbcClient jdbcClient;
@@ -70,18 +51,23 @@ public class ArticleRepository {
      * @param sourceId 이 소스의 기사만 가져온다. 소스를 가리지 않으면 null
      */
     public List<Article> findPage(ArticleCursor cursor, Long sourceId, int limit) {
-        StatementSpec statement = jdbcClient
-                .sql(pageSqlOf(cursor, sourceId))
-                .param("limit", limit);
-        if (cursor != null) {
-            statement = statement
-                    .param("publishedAt", toColumnValue(cursor.publishedAt()))
-                    .param("id", cursor.id());
-        }
+        List<String> conditions = new ArrayList<>();
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("limit", limit);
+
         if (sourceId != null) {
-            statement = statement.param("sourceId", sourceId);
+            conditions.add(SOURCE_CONDITION);
+            params.addValue("sourceId", sourceId);
         }
-        return statement.query(Article.class).list();
+        if (cursor != null) {
+            conditions.add(CURSOR_CONDITION);
+            params.addValue("publishedAt", toColumnValue(cursor.publishedAt()))
+                    .addValue("id", cursor.id());
+        }
+
+        return jdbcClient.sql(SELECT_SQL + whereOf(conditions) + ORDER_AND_LIMIT_SQL)
+                .paramSource(params)
+                .query(Article.class)
+                .list();
     }
 
     /**
@@ -97,11 +83,11 @@ public class ArticleRepository {
         return Arrays.stream(jdbcTemplate.batchUpdate(INSERT_SQL, params)).sum();
     }
 
-    private String pageSqlOf(ArticleCursor cursor, Long sourceId) {
-        if (sourceId == null) {
-            return cursor == null ? FIRST_PAGE_SQL : NEXT_PAGE_SQL;
+    private String whereOf(List<String> conditions) {
+        if (conditions.isEmpty()) {
+            return "";
         }
-        return cursor == null ? FIRST_PAGE_BY_SOURCE_SQL : NEXT_PAGE_BY_SOURCE_SQL;
+        return " where " + String.join("\n   and ", conditions) + "\n";
     }
 
     private SqlParameterSource paramsOf(NewArticle article) {
