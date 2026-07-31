@@ -109,18 +109,43 @@ class ArticleApiIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("소스를 지정하면 그 소스의 기사만 돌려준다")
+    void returnsOnlyArticlesOfTheGivenSource() {
+        givenArticle(NEW_URL, PUBLISHED_AT);
+        givenArticle("hackernews", OLD_URL, PUBLISHED_AT.minusSeconds(60));
+
+        assertThat(mvc.get().uri("/api/articles").param("source", "hackernews"))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.items[*].url")
+                .asArray()
+                .containsExactly(OLD_URL);
+    }
+
+    @Test
     @DisplayName("해석할 수 없는 커서면 400을 응답한다")
     void rejectsAnUndecodableCursor() {
         assertThat(mvc.get().uri("/api/articles").param("cursor", "!!!"))
                 .hasStatus(HttpStatus.BAD_REQUEST);
     }
 
+    @Test
+    @DisplayName("알 수 없는 소스면 400을 응답한다")
+    void rejectsAnUnknownSource() {
+        assertThat(mvc.get().uri("/api/articles").param("source", "없는소스"))
+                .hasStatus(HttpStatus.BAD_REQUEST);
+    }
+
     private void givenArticle(String url, Instant publishedAt) {
+        givenArticle("google-deepmind", url, publishedAt);
+    }
+
+    private void givenArticle(String feedSlug, String url, Instant publishedAt) {
         repository.insertNew(List.of(new NewArticle(
-                feedId("google-deepmind"), "guid-" + url, url, "제목", "요약", "작성자", publishedAt)));
+                feedId(feedSlug), "guid-" + url, url, "제목", "요약", "작성자", publishedAt)));
     }
 
     private String cursorOfNewest() {
-        return ArticleCursor.of(repository.findPage(null, 1).getFirst()).encode();
+        return ArticleCursor.of(repository.findPage(null, null, 1).getFirst()).encode();
     }
 }

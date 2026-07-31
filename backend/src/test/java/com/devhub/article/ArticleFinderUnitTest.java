@@ -10,8 +10,11 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
+import com.devhub.source.SourceRepository;
+import com.devhub.source.UnknownSourceException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -25,15 +28,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ArticleFinderUnitTest {
 
     private static final Instant PUBLISHED_AT = Instant.parse("2026-07-20T12:00:00Z");
+    private static final String SOURCE = "hackernews";
 
     @Mock
     private ArticleRepository repository;
+
+    @Mock
+    private SourceRepository sourceRepository;
 
     private ArticleFinder finder;
 
     @BeforeEach
     void setUp() {
-        finder = new ArticleFinder(repository);
+        finder = new ArticleFinder(repository, sourceRepository);
     }
 
     @Nested
@@ -43,25 +50,25 @@ class ArticleFinderUnitTest {
         @Test
         @DisplayName("limit이 없으면 기본값만큼 가져온다")
         void fallsBackToTheDefaultLimit() {
-            finder.findPage(null, null);
+            finder.findPage(null, null, null);
 
-            then(repository).should().findPage(null, DEFAULT_LIMIT + 1);
+            then(repository).should().findPage(null, null, DEFAULT_LIMIT + 1);
         }
 
         @Test
         @DisplayName("상한보다 큰 limit은 상한까지만 가져온다")
         void capsTheLimitAtTheMaximum() {
-            finder.findPage(null, 1000);
+            finder.findPage(null, null, 1000);
 
-            then(repository).should().findPage(null, MAX_LIMIT + 1);
+            then(repository).should().findPage(null, null, MAX_LIMIT + 1);
         }
 
         @Test
         @DisplayName("0 이하인 limit은 하한까지 올린다")
         void raisesANonPositiveLimitToTheMinimum() {
-            finder.findPage(null, 0);
+            finder.findPage(null, null, 0);
 
-            then(repository).should().findPage(null, MIN_LIMIT + 1);
+            then(repository).should().findPage(null, null, MIN_LIMIT + 1);
         }
     }
 
@@ -74,7 +81,7 @@ class ArticleFinderUnitTest {
         void pointsTheCursorAtTheLastReturnedArticle() {
             Article last = givenFound(DEFAULT_LIMIT + 1).get(DEFAULT_LIMIT - 1);
 
-            ArticlePage page = finder.findPage(null, null);
+            ArticlePage page = finder.findPage(null, null, null);
 
             assertThat(page.items()).hasSize(DEFAULT_LIMIT);
             assertThat(page.nextCursor())
@@ -86,7 +93,7 @@ class ArticleFinderUnitTest {
         void givesNoCursorOnTheLastPage() {
             givenFound(DEFAULT_LIMIT);
 
-            ArticlePage page = finder.findPage(null, null);
+            ArticlePage page = finder.findPage(null, null, null);
 
             assertThat(page.items()).hasSize(DEFAULT_LIMIT);
             assertThat(page.nextCursor()).isNull();
@@ -102,18 +109,52 @@ class ArticleFinderUnitTest {
         void isDecodedBeforeReachingTheRepository() {
             ArticleCursor cursor = new ArticleCursor(PUBLISHED_AT, 7);
 
-            finder.findPage(cursor.encode(), null);
+            finder.findPage(cursor.encode(), null, null);
 
-            then(repository).should().findPage(cursor, DEFAULT_LIMIT + 1);
+            then(repository).should().findPage(cursor, null, DEFAULT_LIMIT + 1);
         }
 
         @Test
         @DisplayName("해석할 수 없으면 조회하지 않고 예외를 던진다")
         void skipsTheQueryWhenItCannotBeDecoded() {
-            assertThatThrownBy(() -> finder.findPage("!!!", null))
+            assertThatThrownBy(() -> finder.findPage("!!!", null, null))
                     .isInstanceOf(InvalidCursorException.class);
 
             then(repository).shouldHaveNoInteractions();
+        }
+    }
+
+    @Nested
+    @DisplayName("받은 소스")
+    class GivenSource {
+
+        @Test
+        @DisplayName("slug를 소스 id로 바꿔 저장소에 넘긴다")
+        void isTurnedIntoASourceIdBeforeReachingTheRepository() {
+            given(sourceRepository.findEnabledIdBySlug(SOURCE)).willReturn(Optional.of(7L));
+
+            finder.findPage(null, SOURCE, null);
+
+            then(repository).should().findPage(null, 7L, DEFAULT_LIMIT + 1);
+        }
+
+        @Test
+        @DisplayName("그런 활성 소스가 없으면 조회하지 않고 예외를 던진다")
+        void skipsTheQueryWhenNoSuchEnabledSourceExists() {
+            given(sourceRepository.findEnabledIdBySlug(SOURCE)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> finder.findPage(null, SOURCE, null))
+                    .isInstanceOf(UnknownSourceException.class);
+
+            then(repository).shouldHaveNoInteractions();
+        }
+
+        @Test
+        @DisplayName("소스를 지정하지 않으면 소스를 찾지 않는다")
+        void isNotLookedUpWhenNoSourceIsGiven() {
+            finder.findPage(null, null, null);
+
+            then(sourceRepository).shouldHaveNoInteractions();
         }
     }
 
@@ -125,11 +166,11 @@ class ArticleFinderUnitTest {
                         "https://example.com/" + i,
                         null,
                         PUBLISHED_AT.minusSeconds(i),
-                        "hackernews",
-                        "hackernews",
+                        SOURCE,
+                        SOURCE,
                         "Hacker News"))
                 .toList();
-        given(repository.findPage(any(), anyInt())).willReturn(articles);
+        given(repository.findPage(any(), any(), anyInt())).willReturn(articles);
         return articles;
     }
 }

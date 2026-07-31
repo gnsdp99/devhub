@@ -32,28 +32,54 @@ public class ArticleRepository {
               from article a
               join feed f on f.id = a.feed_id
               join source s on s.id = a.source_id
-            %s
+            """;
+
+    private static final String ORDER_AND_LIMIT_SQL = """
              order by a.published_at desc, a.id desc
              limit :limit
             """;
 
-    private static final String CURSOR_CONDITION =
-            " where (a.published_at, a.id) < (:publishedAt, :id)";
+    private static final String CURSOR_WHERE_SQL = """
+             where (a.published_at, a.id) < (:publishedAt, :id)
+            """;
+
+    private static final String SOURCE_WHERE_SQL = """
+             where a.source_id = :sourceId
+            """;
+
+    private static final String SOURCE_AND_CURSOR_WHERE_SQL = """
+             where a.source_id = :sourceId
+               and (a.published_at, a.id) < (:publishedAt, :id)
+            """;
+
+    private static final String FIRST_PAGE_SQL = SELECT_SQL + ORDER_AND_LIMIT_SQL;
+
+    private static final String NEXT_PAGE_SQL = SELECT_SQL + CURSOR_WHERE_SQL + ORDER_AND_LIMIT_SQL;
+
+    private static final String FIRST_PAGE_BY_SOURCE_SQL =
+            SELECT_SQL + SOURCE_WHERE_SQL + ORDER_AND_LIMIT_SQL;
+
+    private static final String NEXT_PAGE_BY_SOURCE_SQL =
+            SELECT_SQL + SOURCE_AND_CURSOR_WHERE_SQL + ORDER_AND_LIMIT_SQL;
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
     private final JdbcClient jdbcClient;
 
     /**
-     * @param cursor 이 커서보다 오래된 기사만 가져온다. 첫 페이지면 null
+     * @param cursor   이 커서보다 오래된 기사만 가져온다. 첫 페이지면 null
+     * @param sourceId 이 소스의 기사만 가져온다. 소스를 가리지 않으면 null
      */
-    public List<Article> findPage(ArticleCursor cursor, int limit) {
+    public List<Article> findPage(ArticleCursor cursor, Long sourceId, int limit) {
         StatementSpec statement = jdbcClient
-                .sql(SELECT_SQL.formatted(cursor == null ? "" : CURSOR_CONDITION))
+                .sql(pageSqlOf(cursor, sourceId))
                 .param("limit", limit);
         if (cursor != null) {
             statement = statement
                     .param("publishedAt", toColumnValue(cursor.publishedAt()))
                     .param("id", cursor.id());
+        }
+        if (sourceId != null) {
+            statement = statement.param("sourceId", sourceId);
         }
         return statement.query(Article.class).list();
     }
@@ -69,6 +95,13 @@ public class ArticleRepository {
                 .map(this::paramsOf)
                 .toArray(SqlParameterSource[]::new);
         return Arrays.stream(jdbcTemplate.batchUpdate(INSERT_SQL, params)).sum();
+    }
+
+    private String pageSqlOf(ArticleCursor cursor, Long sourceId) {
+        if (sourceId == null) {
+            return cursor == null ? FIRST_PAGE_SQL : NEXT_PAGE_SQL;
+        }
+        return cursor == null ? FIRST_PAGE_BY_SOURCE_SQL : NEXT_PAGE_BY_SOURCE_SQL;
     }
 
     private SqlParameterSource paramsOf(NewArticle article) {

@@ -16,7 +16,8 @@ public class ArticleController {
     @GetMapping
     public ArticlePage findArticles(
             @RequestParam(required = false) String cursor,
+            @RequestParam(required = false) String source,
             @RequestParam(required = false) Integer limit) {
-        return finder.findPage(cursor, limit);
+        return finder.findPage(cursor, source, limit);
     }
 }
