@@ -64,9 +64,13 @@ class ArticleApiIntegrationTest extends AbstractIntegrationTest {
                 .hasPathSatisfying("$.items[0].summary", it -> assertThat(it).isEqualTo("요약"))
                 .hasPathSatisfying(
                         "$.items[0].publishedAt", at -> assertThat(at).isEqualTo("2026-07-20T12:00:00Z"))
-                .hasPathSatisfying("$.items[0].feed", it -> assertThat(it).isEqualTo("google-deepmind"))
-                .hasPathSatisfying("$.items[0].source", it -> assertThat(it).isEqualTo("google"))
-                .hasPathSatisfying("$.items[0].sourceName", it -> assertThat(it).isEqualTo("Google"));
+                .hasPathSatisfying(
+                        "$.items[0].sources[0].feed",
+                        it -> assertThat(it).isEqualTo("google-deepmind"))
+                .hasPathSatisfying(
+                        "$.items[0].sources[0].source", it -> assertThat(it).isEqualTo("google"))
+                .hasPathSatisfying(
+                        "$.items[0].sources[0].sourceName", it -> assertThat(it).isEqualTo("Google"));
     }
 
     @Test

@@ -130,7 +130,8 @@ class FeedCollectionIntegrationTest extends AbstractIntegrationTest {
 
     private String articleFeedSlug() {
         return jdbcClient.sql("""
-                        select distinct f.slug from article a join feed f on f.id = a.feed_id
+                        select distinct f.slug
+                          from article_source asrc join feed f on f.id = asrc.feed_id
                         """)
                 .query(String.class)
                 .single();
@@ -138,7 +139,8 @@ class FeedCollectionIntegrationTest extends AbstractIntegrationTest {
 
     private String articleSourceSlug() {
         return jdbcClient.sql("""
-                        select distinct s.slug from article a join source s on s.id = a.source_id
+                        select distinct s.slug
+                          from article_source asrc join source s on s.id = asrc.source_id
                         """)
                 .query(String.class)
                 .single();

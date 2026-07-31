@@ -93,15 +93,25 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
         }
 
         @Test
-        @DisplayName("다른 피드에서 온 같은 기사도 한 건만 남고 먼저 수집한 피드가 출처로 남는다")
-        void keepsTheFirstFeedAsTheSourceOfAnArticleSeenTwice() {
-            long hackernews = feedId("hackernews");
-            repository.insertNew(List.of(articleOf(hackernews, URL)));
+        @DisplayName("같은 글이 다른 소스에서도 오면 기사는 하나만 저장하고 두 소스 모두에서 볼 수 있다")
+        void storesOneArticleAndShowsItUnderBothSources() {
+            repository.insertNew(List.of(articleOf(feedId("hackernews"), URL)));
 
-            int stored = repository.insertNew(List.of(articleOf(feedId("geeknews"), URL)));
+            repository.insertNew(List.of(articleOf(feedId("geeknews"), URL)));
 
-            assertThat(stored).isZero();
-            assertThat(storedFeedId()).isEqualTo(hackernews);
+            assertThat(countArticles()).isEqualTo(1);
+            assertThat(repository.findPage(null, sourceId("hackernews"), 10)).hasSize(1);
+            assertThat(repository.findPage(null, sourceId("geeknews"), 10)).hasSize(1);
+        }
+
+        @Test
+        @DisplayName("한 소스의 두 피드가 같은 글을 실어도 그 소스의 목록에는 한 번만 나온다")
+        void showsTheArticleOnceWhenTwoFeedsOfOneSourceCarryIt() {
+            repository.insertNew(List.of(articleOf(feedId("google-deepmind"), URL)));
+
+            repository.insertNew(List.of(articleOf(feedId("google-cloud"), URL)));
+
+            assertThat(repository.findPage(null, sourceId("google"), 10)).hasSize(1);
         }
     }
 
@@ -115,7 +125,7 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
             long feedId = feedId("google-deepmind");
             repository.insertNew(List.of(articleOf(feedId, URL)));
 
-            long sourceId = jdbcClient.sql("select source_id from article")
+            long sourceId = jdbcClient.sql("select source_id from article_source")
                     .query(Long.class)
                     .single();
 
@@ -254,9 +264,21 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
 
             Article article = repository.findPage(null, null, 10).getFirst();
 
-            assertThat(article.feed()).isEqualTo("google-deepmind");
-            assertThat(article.source()).isEqualTo("google");
-            assertThat(article.sourceName()).isEqualTo("Google");
+            assertThat(article.sources())
+                    .containsExactly(new ArticleSource("google-deepmind", "google", "Google"));
+        }
+
+        @Test
+        @DisplayName("여러 소스에 실린 기사는 소스를 이름순으로 모두 채운다")
+        void listsEverySourceThatCarriedTheArticleOrderedByName() {
+            repository.insertNew(List.of(articleOf(feedId("hackernews"), URL)));
+            repository.insertNew(List.of(articleOf(feedId("geeknews"), URL)));
+
+            Article article = repository.findPage(null, null, 10).getFirst();
+
+            assertThat(article.sources())
+                    .extracting(ArticleSource::sourceName)
+                    .containsExactly("GeekNews", "Hacker News");
         }
     }
 
@@ -282,7 +304,4 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
                 .single();
     }
 
-    private long storedFeedId() {
-        return jdbcClient.sql("select feed_id from article").query(Long.class).single();
-    }
 }
