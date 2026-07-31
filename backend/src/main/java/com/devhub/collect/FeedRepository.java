@@ -33,8 +33,7 @@ public class FeedRepository {
                                last_modified = :lastModified,
                                last_fetched_at = now(),
                                last_success_at = now(),
-                               consecutive_failures = 0,
-                               updated_at = now()
+                               consecutive_failures = 0
                          where id = :id
                         """)
                 .param("id", feedId)
@@ -48,8 +47,7 @@ public class FeedRepository {
                         update feed
                            set last_fetched_at = now(),
                                last_success_at = now(),
-                               consecutive_failures = 0,
-                               updated_at = now()
+                               consecutive_failures = 0
                          where id = :id
                         """)
                 .param("id", feedId)
@@ -60,8 +58,7 @@ public class FeedRepository {
         jdbcClient.sql("""
                         update feed
                            set last_fetched_at = now(),
-                               consecutive_failures = consecutive_failures + 1,
-                               updated_at = now()
+                               consecutive_failures = consecutive_failures + 1
                          where id = :id
                         """)
                 .param("id", feedId)
