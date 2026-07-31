@@ -22,4 +22,14 @@ public class SourceRepository {
                 .query(Source.class)
                 .list();
     }
+
+    /**
+     * @return slug를 쓰는 활성 소스의 id. 없으면 빈 값
+     */
+    public Optional<Long> findEnabledIdBySlug(String slug) {
+        return jdbcClient.sql("select id from source where slug = :slug and enabled")
+                .param("slug", slug)
+                .query(Long.class)
+                .optional();
+    }
 }

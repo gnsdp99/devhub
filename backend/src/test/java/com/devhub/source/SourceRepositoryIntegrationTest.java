@@ -50,4 +50,27 @@ class SourceRepositoryIntegrationTest extends AbstractIntegrationTest {
                             "hackernews", "Hacker News", "NEWS", "https://news.ycombinator.com"));
         }
     }
+
+    @Nested
+    @DisplayName("slug로 찾기")
+    class FindBySlug {
+
+        @Test
+        @DisplayName("활성 소스면 id를 돌려준다")
+        void findsTheIdOfAnEnabledSource() {
+            assertThat(repository.findEnabledIdBySlug("hackernews")).isPresent();
+        }
+
+        @Test
+        @DisplayName("비활성 소스면 빈 값을 돌려준다")
+        void findsNothingForADisabledSource() {
+            assertThat(repository.findEnabledIdBySlug("anthropic")).isEmpty();
+        }
+
+        @Test
+        @DisplayName("그런 slug가 없으면 빈 값을 돌려준다")
+        void findsNothingForAnUnknownSlug() {
+            assertThat(repository.findEnabledIdBySlug("없는소스")).isEmpty();
+        }
+    }
 }

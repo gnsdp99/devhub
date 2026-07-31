@@ -149,7 +149,7 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
                     articleOf(feedId, "https://example.com/old", PUBLISHED_AT.minusSeconds(60)),
                     articleOf(feedId, "https://example.com/new", PUBLISHED_AT)));
 
-            List<Article> page = repository.findPage(null, 10);
+            List<Article> page = repository.findPage(null, null, 10);
 
             assertThat(page).extracting(Article::url)
                     .containsExactly("https://example.com/new", "https://example.com/old");
@@ -163,7 +163,7 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
                     articleOf(feedId, "https://example.com/first", PUBLISHED_AT),
                     articleOf(feedId, "https://example.com/second", PUBLISHED_AT)));
 
-            List<Article> page = repository.findPage(null, 10);
+            List<Article> page = repository.findPage(null, null, 10);
 
             assertThat(page).extracting(Article::url)
                     .containsExactly("https://example.com/second", "https://example.com/first");
@@ -178,7 +178,7 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
                     articleOf(feedId, "https://example.com/2", PUBLISHED_AT.minusSeconds(1)),
                     articleOf(feedId, "https://example.com/3", PUBLISHED_AT.minusSeconds(2))));
 
-            assertThat(repository.findPage(null, 2)).hasSize(2);
+            assertThat(repository.findPage(null, null, 2)).hasSize(2);
         }
 
         @Test
@@ -189,9 +189,9 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
                     articleOf(feedId, "https://example.com/1", PUBLISHED_AT),
                     articleOf(feedId, "https://example.com/2", PUBLISHED_AT.minusSeconds(1)),
                     articleOf(feedId, "https://example.com/3", PUBLISHED_AT.minusSeconds(2))));
-            Article first = repository.findPage(null, 1).getFirst();
+            Article first = repository.findPage(null, null, 1).getFirst();
 
-            List<Article> page = repository.findPage(ArticleCursor.of(first), 10);
+            List<Article> page = repository.findPage(ArticleCursor.of(first), null, 10);
 
             assertThat(page).extracting(Article::url)
                     .containsExactly("https://example.com/2", "https://example.com/3");
@@ -205,9 +205,9 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
                     articleOf(feedId, "https://example.com/1", PUBLISHED_AT),
                     articleOf(feedId, "https://example.com/2", PUBLISHED_AT),
                     articleOf(feedId, "https://example.com/3", PUBLISHED_AT)));
-            List<Article> first = repository.findPage(null, 2);
+            List<Article> first = repository.findPage(null, null, 2);
 
-            List<Article> second = repository.findPage(ArticleCursor.of(first.getLast()), 2);
+            List<Article> second = repository.findPage(ArticleCursor.of(first.getLast()), null, 2);
 
             assertThat(Stream.concat(first.stream(), second.stream()))
                     .extracting(Article::url)
@@ -218,11 +218,41 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
         }
 
         @Test
+        @DisplayName("소스를 지정하면 그 소스의 기사만 돌려준다")
+        void returnsOnlyArticlesOfTheGivenSource() {
+            repository.insertNew(List.of(
+                    articleOf(feedId("hackernews"), "https://example.com/hn", PUBLISHED_AT),
+                    articleOf(
+                            feedId("google-deepmind"),
+                            "https://example.com/google",
+                            PUBLISHED_AT.minusSeconds(1))));
+
+            List<Article> page = repository.findPage(null, sourceId("google"), 10);
+
+            assertThat(page).extracting(Article::url).containsExactly("https://example.com/google");
+        }
+
+        @Test
+        @DisplayName("소스와 커서를 함께 걸면 둘 다 적용한다")
+        void appliesBothTheSourceAndTheCursor() {
+            long deepmind = feedId("google-deepmind");
+            repository.insertNew(List.of(
+                    articleOf(deepmind, "https://example.com/google-new", PUBLISHED_AT),
+                    articleOf(deepmind, "https://example.com/google-old", PUBLISHED_AT.minusSeconds(60)),
+                    articleOf(feedId("hackernews"), "https://example.com/hn", PUBLISHED_AT.minusSeconds(30))));
+            Article newest = repository.findPage(null, sourceId("google"), 1).getFirst();
+
+            List<Article> page = repository.findPage(ArticleCursor.of(newest), sourceId("google"), 10);
+
+            assertThat(page).extracting(Article::url).containsExactly("https://example.com/google-old");
+        }
+
+        @Test
         @DisplayName("기사마다 피드와 소스 정보를 채운다")
         void fillsTheFeedAndSourceOfEachArticle() {
             repository.insertNew(List.of(articleOf(feedId("google-deepmind"), URL)));
 
-            Article article = repository.findPage(null, 10).getFirst();
+            Article article = repository.findPage(null, null, 10).getFirst();
 
             assertThat(article.feed()).isEqualTo("google-deepmind");
             assertThat(article.source()).isEqualTo("google");
@@ -236,6 +266,13 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
 
     private NewArticle articleOf(long feedId, String url, Instant publishedAt) {
         return new NewArticle(feedId, "guid-" + url, url, "제목", "요약", "작성자", publishedAt);
+    }
+
+    private long sourceId(String slug) {
+        return jdbcClient.sql("select id from source where slug = :slug")
+                .param("slug", slug)
+                .query(Long.class)
+                .single();
     }
 
     private long sourceIdOf(long feedId) {
