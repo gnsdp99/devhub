@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.devhub.support.AbstractIntegrationTest;
 import java.time.Instant;
 import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -136,8 +137,105 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
         }
     }
 
+    @Nested
+    @DisplayName("페이지 조회")
+    class Page {
+
+        @Test
+        @DisplayName("최근에 발행된 기사부터 돌려준다")
+        void returnsTheMostRecentlyPublishedArticlesFirst() {
+            long feedId = feedId("hackernews");
+            repository.insertNew(List.of(
+                    articleOf(feedId, "https://example.com/old", PUBLISHED_AT.minusSeconds(60)),
+                    articleOf(feedId, "https://example.com/new", PUBLISHED_AT)));
+
+            List<Article> page = repository.findPage(null, 10);
+
+            assertThat(page).extracting(Article::url)
+                    .containsExactly("https://example.com/new", "https://example.com/old");
+        }
+
+        @Test
+        @DisplayName("발행 시각이 같으면 나중에 저장한 기사부터 돌려준다")
+        void breaksTiesOnPublishedAtByIdDescending() {
+            long feedId = feedId("hackernews");
+            repository.insertNew(List.of(
+                    articleOf(feedId, "https://example.com/first", PUBLISHED_AT),
+                    articleOf(feedId, "https://example.com/second", PUBLISHED_AT)));
+
+            List<Article> page = repository.findPage(null, 10);
+
+            assertThat(page).extracting(Article::url)
+                    .containsExactly("https://example.com/second", "https://example.com/first");
+        }
+
+        @Test
+        @DisplayName("limit보다 많이 돌려주지 않는다")
+        void returnsAtMostTheGivenLimit() {
+            long feedId = feedId("hackernews");
+            repository.insertNew(List.of(
+                    articleOf(feedId, "https://example.com/1", PUBLISHED_AT),
+                    articleOf(feedId, "https://example.com/2", PUBLISHED_AT.minusSeconds(1)),
+                    articleOf(feedId, "https://example.com/3", PUBLISHED_AT.minusSeconds(2))));
+
+            assertThat(repository.findPage(null, 2)).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("커서보다 오래된 기사만 돌려준다")
+        void returnsOnlyArticlesOlderThanTheCursor() {
+            long feedId = feedId("hackernews");
+            repository.insertNew(List.of(
+                    articleOf(feedId, "https://example.com/1", PUBLISHED_AT),
+                    articleOf(feedId, "https://example.com/2", PUBLISHED_AT.minusSeconds(1)),
+                    articleOf(feedId, "https://example.com/3", PUBLISHED_AT.minusSeconds(2))));
+            Article first = repository.findPage(null, 1).getFirst();
+
+            List<Article> page = repository.findPage(ArticleCursor.of(first), 10);
+
+            assertThat(page).extracting(Article::url)
+                    .containsExactly("https://example.com/2", "https://example.com/3");
+        }
+
+        @Test
+        @DisplayName("발행 시각이 같은 기사도 커서로 건너뛰거나 겹치지 않는다")
+        void pagesThroughArticlesThatSharePublishedAt() {
+            long feedId = feedId("hackernews");
+            repository.insertNew(List.of(
+                    articleOf(feedId, "https://example.com/1", PUBLISHED_AT),
+                    articleOf(feedId, "https://example.com/2", PUBLISHED_AT),
+                    articleOf(feedId, "https://example.com/3", PUBLISHED_AT)));
+            List<Article> first = repository.findPage(null, 2);
+
+            List<Article> second = repository.findPage(ArticleCursor.of(first.getLast()), 2);
+
+            assertThat(Stream.concat(first.stream(), second.stream()))
+                    .extracting(Article::url)
+                    .containsExactly(
+                            "https://example.com/3",
+                            "https://example.com/2",
+                            "https://example.com/1");
+        }
+
+        @Test
+        @DisplayName("기사마다 피드와 소스 정보를 채운다")
+        void fillsTheFeedAndSourceOfEachArticle() {
+            repository.insertNew(List.of(articleOf(feedId("google-deepmind"), URL)));
+
+            Article article = repository.findPage(null, 10).getFirst();
+
+            assertThat(article.feed()).isEqualTo("google-deepmind");
+            assertThat(article.source()).isEqualTo("google");
+            assertThat(article.sourceName()).isEqualTo("Google");
+        }
+    }
+
     private NewArticle articleOf(long feedId, String url) {
-        return new NewArticle(feedId, "guid-" + url, url, "제목", "요약", "작성자", PUBLISHED_AT);
+        return articleOf(feedId, url, PUBLISHED_AT);
+    }
+
+    private NewArticle articleOf(long feedId, String url, Instant publishedAt) {
+        return new NewArticle(feedId, "guid-" + url, url, "제목", "요약", "작성자", publishedAt);
     }
 
     private long sourceIdOf(long feedId) {
