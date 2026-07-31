@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
 @SpringBootTest
-@Import(ContainerConfig.class)
+@Import({ContainerConfig.class, TestAddressPolicyConfig.class})
 public abstract class AbstractIntegrationTest {
 
     @Autowired

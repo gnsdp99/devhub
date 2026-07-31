@@ -5,10 +5,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.devhub.support.StubHttpServer;
+import com.devhub.support.TestAddressPolicyConfig;
 import com.sun.net.httpserver.Headers;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.GZIPOutputStream;
 import org.junit.jupiter.api.AfterEach;
@@ -21,7 +26,7 @@ class FeedFetcherIntegrationTest {
 
     private static final String FEED_BODY = "<rss version=\"2.0\"><channel/></rss>";
 
-    private final FeedFetcher fetcher = new FeedFetcher(RestClient.builder());
+    private final FeedFetcher fetcher = new FeedFetcher(RestClient.builder(), TestAddressPolicyConfig.ALLOW_ALL);
 
     private StubHttpServer server;
 
@@ -159,6 +164,67 @@ class FeedFetcherIntegrationTest {
         assertThatThrownBy(() -> fetcher.fetch(url, null, null))
                 .isInstanceOf(FeedFetchException.class)
                 .hasMessageContaining("바이트");
+    }
+
+    @Test
+    @DisplayName("서버 연결에 실패하면 FeedFetchException을 던진다")
+    void failsWhenTheServerIsUnreachable() {
+        assertThatThrownBy(() -> fetcher.fetch("http://127.0.0.1:1/feed.xml", null, null))
+                .isInstanceOf(FeedFetchException.class);
+    }
+
+    @Test
+    @DisplayName("리다이렉트가 상한을 넘으면 FeedFetchException을 던진다")
+    void failsOnTooManyRedirects() {
+        AtomicReference<String> self = new AtomicReference<>();
+        self.set(server.serve("/loop", exchange -> {
+            exchange.getResponseHeaders().set("Location", self.get());
+            respond(exchange, 301, new byte[0]);
+        }));
+
+        assertThatThrownBy(() -> fetcher.fetch(self.get(), null, null))
+                .isInstanceOf(FeedFetchException.class);
+    }
+
+    @Test
+    @DisplayName("리다이렉트 응답에 Location이 없으면 FeedFetchException을 던진다")
+    void failsWhenTheRedirectHasNoLocation() {
+        String url = server.serve("/feed", exchange -> respond(exchange, 301, new byte[0]));
+
+        assertThatThrownBy(() -> fetcher.fetch(url, null, null))
+                .isInstanceOf(FeedFetchException.class);
+    }
+
+    @Test
+    @DisplayName("리다이렉트 대상도 주소 검사를 거친다")
+    void checksTheAddressOfEveryHop() {
+        List<URI> checked = new ArrayList<>();
+        String target = server.serve("/moved", exchange -> respond(exchange, 200, utf8(FEED_BODY)));
+        String url = server.serve("/feed", exchange -> {
+            exchange.getResponseHeaders().set("Location", target);
+            respond(exchange, 301, new byte[0]);
+        });
+
+        new FeedFetcher(RestClient.builder(), checked::add).fetch(url, null, null);
+
+        assertThat(checked).extracting(URI::getPath).containsExactly("/feed", "/moved");
+    }
+
+    @Test
+    @DisplayName("주소 정책이 막으면 요청을 보내지 않는다")
+    void sendsNoRequestWhenThePolicyRejects() {
+        AtomicBoolean requested = new AtomicBoolean();
+        String url = server.serve("/feed", exchange -> {
+            requested.set(true);
+            respond(exchange, 200, utf8(FEED_BODY));
+        });
+        FeedFetcher blocked = new FeedFetcher(RestClient.builder(), uri -> {
+            throw new FeedFetchException("내부 주소로는 요청하지 않습니다: " + uri);
+        });
+
+        assertThatThrownBy(() -> blocked.fetch(url, null, null))
+                .isInstanceOf(FeedFetchException.class);
+        assertThat(requested).isFalse();
     }
 
     private static byte[] utf8(String text) {

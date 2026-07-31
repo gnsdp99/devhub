@@ -13,6 +13,7 @@ import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 @Slf4j
 @Component
@@ -23,52 +24,94 @@ public class FeedFetcher {
     private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
     private static final Duration READ_TIMEOUT = Duration.ofSeconds(10);
     private static final int MAX_BODY_BYTES = 10 * 1024 * 1024;
+    private static final int MAX_REDIRECTS = 5;
 
     private final RestClient restClient;
+    private final FeedAddressPolicy addressPolicy;
 
-    public FeedFetcher(RestClient.Builder builder) {
+    public FeedFetcher(RestClient.Builder builder, FeedAddressPolicy addressPolicy) {
         HttpClient httpClient = HttpClient.newBuilder()
                 .connectTimeout(CONNECT_TIMEOUT)
-                .followRedirects(HttpClient.Redirect.NORMAL)
+                .followRedirects(HttpClient.Redirect.NEVER)
                 .build();
         JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
         requestFactory.setReadTimeout(READ_TIMEOUT);
         this.restClient = builder.requestFactory(requestFactory).build();
+        this.addressPolicy = addressPolicy;
     }
 
+    /**
+     * @throws FeedFetchException 피드를 가져오지 못하면
+     */
     public FetchResult fetch(String feedUrl, String etag, String lastModified) {
-        return restClient.get()
-                .uri(URI.create(feedUrl))
-                .header(HttpHeaders.USER_AGENT, USER_AGENT)
-                .header(HttpHeaders.ACCEPT_ENCODING, "gzip")
-                .headers(headers -> {
-                    if (etag != null) {
-                        headers.set(HttpHeaders.IF_NONE_MATCH, etag);
-                    }
-                    if (lastModified != null) {
-                        headers.set(HttpHeaders.IF_MODIFIED_SINCE, lastModified);
-                    }
-                })
-                .exchange((request, response) -> toResult(feedUrl, response));
+        URI uri = uriOf(feedUrl);
+        for (int hop = 0; hop <= MAX_REDIRECTS; hop++) {
+            addressPolicy.check(uri);
+            Hop result = exchange(uri, etag, lastModified);
+            if (result.fetched() != null) {
+                return result.fetched();
+            }
+            uri = uri.resolve(result.location());
+        }
+        throw new FeedFetchException("리다이렉트가 " + MAX_REDIRECTS + "회를 넘습니다: " + feedUrl);
     }
 
-    private FetchResult toResult(String feedUrl, ClientHttpResponse response) throws IOException {
+    private URI uriOf(String feedUrl) {
+        try {
+            return URI.create(feedUrl);
+        } catch (IllegalArgumentException e) {
+            throw new FeedFetchException("피드 URL 형식이 올바르지 않습니다: " + feedUrl, e);
+        }
+    }
+
+    private Hop exchange(URI uri, String etag, String lastModified) {
+        try {
+            return restClient.get()
+                    .uri(uri)
+                    .header(HttpHeaders.USER_AGENT, USER_AGENT)
+                    .header(HttpHeaders.ACCEPT_ENCODING, "gzip")
+                    .headers(headers -> {
+                        if (etag != null) {
+                            headers.set(HttpHeaders.IF_NONE_MATCH, etag);
+                        }
+                        if (lastModified != null) {
+                            headers.set(HttpHeaders.IF_MODIFIED_SINCE, lastModified);
+                        }
+                    })
+                    .exchange((request, response) -> toHop(uri, response));
+        } catch (RestClientException e) {
+            throw new FeedFetchException("피드를 가져오지 못했습니다: " + uri, e);
+        }
+    }
+
+    private Hop toHop(URI uri, ClientHttpResponse response) throws IOException {
         HttpStatus status = HttpStatus.resolve(response.getStatusCode().value());
         if (status == HttpStatus.NOT_MODIFIED) {
-            log.debug("변경되지 않았습니다. url={}", feedUrl);
-            return new FetchResult.NotModified();
+            log.debug("변경되지 않았습니다. url={}", uri);
+            return Hop.of(new FetchResult.NotModified());
+        }
+        if (status != null && status.is3xxRedirection()) {
+            return Hop.to(redirectLocation(uri, response));
         }
         if (status == null || !status.is2xxSuccessful()) {
-            throw new FeedFetchException("피드 응답이 " + response.getStatusCode() + "입니다: " + feedUrl);
+            throw new FeedFetchException("피드 응답이 " + response.getStatusCode() + "입니다: " + uri);
         }
 
         HttpHeaders headers = response.getHeaders();
-        byte[] body = readBody(feedUrl, response);
-        return new FetchResult.Fetched(
-                body, headers.getETag(), headers.getFirst(HttpHeaders.LAST_MODIFIED));
+        byte[] body = readBody(uri, response);
+        return Hop.of(new FetchResult.Fetched(
+                body, headers.getETag(), headers.getFirst(HttpHeaders.LAST_MODIFIED)));
     }
 
-    private byte[] readBody(String feedUrl, ClientHttpResponse response) throws IOException {
+    private String redirectLocation(URI uri, ClientHttpResponse response) {
+        String location = response.getHeaders().getFirst(HttpHeaders.LOCATION);
+        if (location == null || location.isBlank()) {
+            throw new FeedFetchException("리다이렉트 응답에 Location이 없습니다: " + uri);
+        }
+        return location;
+    }
+
+    private byte[] readBody(URI uri, ClientHttpResponse response) throws IOException {
         boolean gzipped = "gzip".equalsIgnoreCase(
                 response.getHeaders().getFirst(HttpHeaders.CONTENT_ENCODING));
         try (InputStream body = response.getBody();
@@ -76,9 +119,20 @@ public class FeedFetcher {
             byte[] read = stream.readNBytes(MAX_BODY_BYTES + 1);
             if (read.length > MAX_BODY_BYTES) {
                 throw new FeedFetchException(
-                        "피드 본문이 " + MAX_BODY_BYTES + "바이트를 넘습니다: " + feedUrl);
+                        "피드 본문이 " + MAX_BODY_BYTES + "바이트를 넘습니다: " + uri);
             }
             return read;
+        }
+    }
+
+    private record Hop(FetchResult fetched, String location) {
+
+        static Hop of(FetchResult fetched) {
+            return new Hop(fetched, null);
+        }
+
+        static Hop to(String location) {
+            return new Hop(null, location);
         }
     }
 }

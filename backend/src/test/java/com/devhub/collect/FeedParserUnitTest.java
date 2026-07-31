@@ -175,6 +175,17 @@ class FeedParserUnitTest {
                     .isInstanceOf(FeedParseException.class);
         }
 
+        @Test
+        @DisplayName("DOCTYPE이 있으면 외부 엔티티를 읽지 않고 거부한다")
+        void rejectsDoctype() {
+            assertThatThrownBy(() -> parse("""
+                    <?xml version="1.0" encoding="UTF-8"?>
+                    <!DOCTYPE rss [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>
+                    <rss version="2.0"><channel><title>&xxe;</title><link>https://example.com</link>
+                    <description>d</description></channel></rss>"""))
+                    .isInstanceOf(FeedParseException.class);
+        }
+
         private String rss(String items) {
             return """
                     <?xml version="1.0" encoding="UTF-8"?>
