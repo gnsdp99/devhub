@@ -3,8 +3,10 @@ package com.devhub.collect;
 import static com.devhub.support.StubHttpServer.respond;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.devhub.support.AbstractIntegrationTest;
+import com.devhub.support.CollectionContainerConfig;
+import com.devhub.support.IntegrationTestSupport;
 import com.devhub.support.StubHttpServer;
+import com.devhub.support.TestAddressPolicyConfig;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -16,8 +18,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.jdbc.Sql;
 
-class FeedCollectionIntegrationTest extends AbstractIntegrationTest {
+@SpringBootTest
+@Import({CollectionContainerConfig.class, TestAddressPolicyConfig.class})
+@Sql(scripts = "/sql/reset-collection.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+class FeedCollectionIntegrationTest extends IntegrationTestSupport {
 
     private static final String SOURCE_SLUG = "test-source";
 
@@ -44,22 +52,8 @@ class FeedCollectionIntegrationTest extends AbstractIntegrationTest {
     }
 
     @AfterEach
-    void restoreSeededFeeds() {
+    void stopServer() {
         server.stop();
-
-        update("delete from article");
-        updateTestSource(
-                "delete from feed where source_id = (select id from source where slug = :slug)");
-        updateTestSource("delete from source where slug = :slug");
-        update("""
-                update feed
-                   set enabled = true,
-                       etag = null,
-                       last_modified = null,
-                       last_fetched_at = null,
-                       last_success_at = null,
-                       consecutive_failures = 0
-                """);
     }
 
     @Test
