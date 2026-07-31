@@ -116,6 +116,17 @@ class FeedRepositoryIntegrationTest extends AbstractIntegrationTest {
 
             assertThat(failureCountOf(feedId)).isZero();
         }
+
+        @Test
+        @DisplayName("피드를 갱신하면 updated_at이 따라 갱신된다")
+        void updatingAFeedMovesUpdatedAt() {
+            long feedId = feedId("hackernews");
+            Instant before = instantOf(feedId, "updated_at");
+
+            repository.markFailed(feedId);
+
+            assertThat(instantOf(feedId, "updated_at")).isAfter(before);
+        }
     }
 
     private List<String> slugsOf(List<Feed> feeds) {

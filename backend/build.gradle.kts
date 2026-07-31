@@ -52,6 +52,10 @@ tasks.withType<Test> {
     useJUnitPlatform()
 }
 
+tasks.named<Jar>("jar") {
+    enabled = false
+}
+
 fun registerTestTask(name: String, pattern: String, summary: String) =
     tasks.register<Test>(name) {
         group = LifecycleBasePlugin.VERIFICATION_GROUP

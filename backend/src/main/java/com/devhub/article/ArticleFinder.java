@@ -32,7 +32,7 @@ public class ArticleFinder {
                 pageSize + 1);
 
         if (found.size() <= pageSize) {
-            return new ArticlePage(found, null);
+            return new ArticlePage(List.copyOf(found), null);
         }
         List<Article> items = List.copyOf(found.subList(0, pageSize));
         return new ArticlePage(items, ArticleCursor.of(items.getLast()).encode());

@@ -20,10 +20,13 @@ public record ArticleCursor(Instant publishedAt, long id) {
             String decoded = new String(
                     Base64.getUrlDecoder().decode(encoded), StandardCharsets.UTF_8);
             int separator = decoded.indexOf(SEPARATOR);
+            if (separator == -1) {
+                throw new IllegalArgumentException("구분자가 없습니다: " + decoded);
+            }
             return new ArticleCursor(
                     Instant.ofEpochMilli(Long.parseLong(decoded.substring(0, separator))),
                     Long.parseLong(decoded.substring(separator + 1)));
-        } catch (RuntimeException e) {
+        } catch (IllegalArgumentException e) {
             throw new InvalidCursorException(encoded, e);
         }
     }
