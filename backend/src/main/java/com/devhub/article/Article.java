@@ -1,6 +1,7 @@
 package com.devhub.article;
 
 import java.time.Instant;
+import java.util.List;
 
 public record Article(
         long id,
@@ -8,7 +9,5 @@ public record Article(
         String url,
         String summary,
         Instant publishedAt,
-        String feed,
-        String source,
-        String sourceName) {
+        List<ArticleSource> sources) {
 }

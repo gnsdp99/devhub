@@ -29,6 +29,7 @@ class ArticleFinderUnitTest {
 
     private static final Instant PUBLISHED_AT = Instant.parse("2026-07-20T12:00:00Z");
     private static final String SOURCE = "hackernews";
+    private static final String SOURCE_NAME = "Hacker News";
 
     @Mock
     private ArticleRepository repository;
@@ -166,9 +167,7 @@ class ArticleFinderUnitTest {
                         "https://example.com/" + i,
                         null,
                         PUBLISHED_AT.minusSeconds(i),
-                        SOURCE,
-                        SOURCE,
-                        "Hacker News"))
+                        List.of(new ArticleSource(SOURCE, SOURCE, SOURCE_NAME))))
                 .toList();
         given(repository.findPage(any(), any(), anyInt())).willReturn(articles);
         return articles;
