@@ -15,6 +15,16 @@ export function useAppLayout(): AppLayoutContext {
   return useOutletContext<AppLayoutContext>();
 }
 
+function sidebarMessage(offline: boolean, failed: boolean): string | undefined {
+  if (offline) {
+    return "인터넷 연결이 끊겼어요";
+  }
+  if (failed) {
+    return "소스 목록을 불러오지 못했어요";
+  }
+  return undefined;
+}
+
 export function AppLayout() {
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [desktopOpen, setDesktopOpen] = useState(true);
@@ -27,6 +37,7 @@ export function AppLayout() {
     queryFn: fetchSources,
     staleTime: 5 * 60_000,
   });
+  const sourcesOffline = sources.fetchStatus === "paused";
 
   function toggleSidebar() {
     if (isDesktop) {
@@ -55,8 +66,8 @@ export function AppLayout() {
 
       <Sidebar
         sources={sources.data}
-        isPending={sources.isPending}
-        errorMessage={sources.error ? "소스 목록을 불러오지 못했어요" : undefined}
+        isPending={sources.isPending && !sourcesOffline}
+        errorMessage={sidebarMessage(sourcesOffline, sources.error !== null)}
         query={sourceQuery}
         onQueryChange={setSourceQuery}
         drawerOpen={drawerOpen}

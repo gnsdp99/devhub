@@ -55,6 +55,27 @@ export function CloseIcon({ className }: IconProps) {
   );
 }
 
+export function OfflineIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 48 48"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M5 17a29 29 0 0 1 38 0" />
+      <path d="M13 26a18 18 0 0 1 22 0" />
+      <path d="M20 34a8 8 0 0 1 8 0" />
+      <path d="M24 41h.01" />
+      <path d="M7 7 41 41" />
+    </svg>
+  );
+}
+
 export function EmptyIcon({ className }: IconProps) {
   return (
     <svg

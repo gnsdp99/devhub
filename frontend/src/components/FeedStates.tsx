@@ -1,4 +1,4 @@
-import { EmptyIcon } from "./icons";
+import { EmptyIcon, OfflineIcon } from "./icons";
 
 const SKELETON_KEYS = ["a", "b", "c", "d"] as const;
 const SKELETON_WIDTHS = ["92%", "74%", "86%", "66%"] as const;
@@ -35,6 +35,26 @@ export function EmptyFeed({ scoped }: { scoped: boolean }) {
       <p className="text-sm text-neutral-400">
         {scoped ? "이 소스의 " : ""}새 글이 올라오면 여기에 표시됩니다
       </p>
+    </div>
+  );
+}
+
+/** 연결이 돌아오면 보류된 요청이 저절로 이어지므로 재시도 버튼을 두지 않는다. */
+export function OfflineFeed() {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-3.5 px-6 text-center">
+      <OfflineIcon className="size-20 text-neutral-300" />
+      <p className="text-lg text-neutral-600">인터넷 연결이 끊겼어요</p>
+      <p className="text-sm text-neutral-400">다시 연결되면 자동으로 불러옵니다</p>
+    </div>
+  );
+}
+
+export function OfflineBlock() {
+  return (
+    <div className="flex flex-none items-center justify-center gap-2 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 px-4 py-5 text-center">
+      <OfflineIcon className="size-4 flex-none text-neutral-400" />
+      <p className="text-sm text-neutral-600">연결이 끊겼어요. 다시 연결되면 이어서 불러옵니다</p>
     </div>
   );
 }
