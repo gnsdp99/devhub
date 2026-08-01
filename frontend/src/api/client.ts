@@ -1,5 +1,3 @@
-const BASE_URL: string = import.meta.env.VITE_API_BASE_URL ?? "";
-
 type ProblemDetail = {
   title?: string;
   detail?: string;
@@ -26,7 +24,7 @@ export async function apiGet<T>(
     }
   }
   const queryString = query.toString();
-  const response = await fetch(`${BASE_URL}${path}${queryString ? `?${queryString}` : ""}`);
+  const response = await fetch(`${path}${queryString ? `?${queryString}` : ""}`);
   if (!response.ok) {
     throw new ApiError(response.status, await messageOf(response));
   }
