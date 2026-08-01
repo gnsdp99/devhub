@@ -9,6 +9,7 @@ public record ArticleResponse(
         String title,
         String url,
         String summary,
+        String author,
         Instant publishedAt,
         List<ArticleSourceResponse> sources) {
 
@@ -18,6 +19,7 @@ public record ArticleResponse(
                 article.title(),
                 article.url(),
                 article.summary(),
+                article.author(),
                 article.publishedAt(),
                 article.sources().stream().map(ArticleSourceResponse::from).toList());
     }

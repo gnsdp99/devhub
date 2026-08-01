@@ -50,6 +50,7 @@ class ArticleApiIntegrationTest extends AbstractApiIntegrationTest {
                 .hasPathSatisfying("$.items[0].title", title -> assertThat(title).isEqualTo("제목"))
                 .hasPathSatisfying("$.items[0].url", url -> assertThat(url).isEqualTo(NEW_URL))
                 .hasPathSatisfying("$.items[0].summary", it -> assertThat(it).isEqualTo("요약"))
+                .hasPathSatisfying("$.items[0].author", it -> assertThat(it).isEqualTo("작성자"))
                 .hasPathSatisfying(
                         "$.items[0].publishedAt", at -> assertThat(at).isEqualTo("2026-07-20T12:00:00Z"))
                 .hasPathSatisfying(

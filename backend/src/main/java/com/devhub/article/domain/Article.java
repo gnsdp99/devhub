@@ -8,6 +8,7 @@ public record Article(
         String title,
         String url,
         String summary,
+        String author,
         Instant publishedAt,
         List<ArticleSource> sources) {
 }

@@ -46,12 +46,12 @@ public class JdbcArticleRepository implements ArticleRepository {
             """;
 
     private static final String SELECT_GLOBAL_SQL = """
-            select a.id, a.title, a.url, a.summary, a.published_at
+            select a.id, a.title, a.url, a.summary, a.author, a.published_at
               from article a
             """;
 
     private static final String SELECT_BY_SOURCE_SQL = """
-            select a.id, a.title, a.url, a.summary, asrc.published_at
+            select a.id, a.title, a.url, a.summary, a.author, asrc.published_at
               from article_source asrc
               join article a on a.id = asrc.article_id
             """;
@@ -154,6 +154,7 @@ public class JdbcArticleRepository implements ArticleRepository {
                         row.title(),
                         row.url(),
                         row.summary(),
+                        row.author(),
                         row.publishedAt(),
                         sources.getOrDefault(row.id(), List.of())))
                 .toList();
@@ -198,7 +199,7 @@ public class JdbcArticleRepository implements ArticleRepository {
     }
 
     private record ArticleRow(
-            long id, String title, String url, String summary, Instant publishedAt) {
+            long id, String title, String url, String summary, String author, Instant publishedAt) {
     }
 
     private record SourceRow(long articleId, String feed, String source, String sourceName) {
