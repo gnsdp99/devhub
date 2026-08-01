@@ -71,10 +71,10 @@ public class FeedCollector {
     }
 
     private List<NewArticle> toNewArticles(Feed feed, List<ParsedArticle> parsed) {
-        Instant oldest = clock.instant().minus(properties.window());
+        Instant now = clock.instant();
         List<NewArticle> articles = new ArrayList<>();
         for (ParsedArticle article : parsed) {
-            if (article.publishedAt().isBefore(oldest)) {
+            if (!CollectionWindow.includes(article.publishedAt(), now)) {
                 continue;
             }
             try {

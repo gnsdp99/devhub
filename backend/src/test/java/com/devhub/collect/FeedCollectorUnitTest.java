@@ -51,7 +51,7 @@ class FeedCollectorUnitTest {
 
     @BeforeEach
     void setUp() {
-        collector = collectorWith(CollectPropertiesFixture.of(WINDOW));
+        collector = collectorWith(CollectPropertiesFixture.defaults());
     }
 
     @Test
@@ -174,7 +174,7 @@ class FeedCollectorUnitTest {
     }
 
     private FeedCollector collectorWith(int concurrency) {
-        return collectorWith(CollectPropertiesFixture.of(WINDOW, concurrency));
+        return collectorWith(CollectPropertiesFixture.of(concurrency));
     }
 
     private FeedCollector collectorWith(CollectProperties properties) {
