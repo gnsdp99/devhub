@@ -52,7 +52,7 @@ public class FeedCollector {
         try {
             FetchResult result = fetcher.fetch(feed.feedUrl(), feed.etag(), feed.lastModified());
             switch (result) {
-                case FetchResult.NotModified ignored -> feedRepository.markUnchanged(feed.id());
+                case FetchResult.NotModified _ -> feedRepository.markUnchanged(feed.id());
                 case FetchResult.Fetched fetched -> store(feed, fetched);
             }
         } catch (FeedFetchException | FeedParseException e) {
