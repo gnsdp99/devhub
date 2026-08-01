@@ -4,18 +4,32 @@ import { Outlet, useOutletContext } from "react-router";
 import { fetchSources, type Source } from "../api/sources";
 import { Sidebar } from "../components/Sidebar";
 import { useMediaQuery } from "../lib/useMediaQuery";
+import { type Theme, useTheme } from "../lib/useTheme";
 
 export type AppLayoutContext = {
   sources: Source[] | undefined;
   sidebarOpen: boolean;
   toggleSidebar: () => void;
+  theme: Theme;
+  toggleTheme: () => void;
 };
 
 export function useAppLayout(): AppLayoutContext {
   return useOutletContext<AppLayoutContext>();
 }
 
+function sidebarMessage(offline: boolean, failed: boolean): string | undefined {
+  if (offline) {
+    return "인터넷 연결이 끊겼어요";
+  }
+  if (failed) {
+    return "소스 목록을 불러오지 못했어요";
+  }
+  return undefined;
+}
+
 export function AppLayout() {
+  const { theme, toggle: toggleTheme } = useTheme();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [desktopOpen, setDesktopOpen] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -27,6 +41,7 @@ export function AppLayout() {
     queryFn: fetchSources,
     staleTime: 5 * 60_000,
   });
+  const sourcesOffline = sources.fetchStatus === "paused";
 
   function toggleSidebar() {
     if (isDesktop) {
@@ -40,10 +55,12 @@ export function AppLayout() {
     sources: sources.data,
     sidebarOpen: isDesktop ? desktopOpen : drawerOpen,
     toggleSidebar,
+    theme,
+    toggleTheme,
   };
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-white text-neutral-900">
+    <div className="flex h-dvh overflow-hidden bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
       {drawerOpen && (
         <button
           type="button"
@@ -55,8 +72,8 @@ export function AppLayout() {
 
       <Sidebar
         sources={sources.data}
-        isPending={sources.isPending}
-        errorMessage={sources.error ? "소스 목록을 불러오지 못했어요" : undefined}
+        isPending={sources.isPending && !sourcesOffline}
+        errorMessage={sidebarMessage(sourcesOffline, sources.error !== null)}
         query={sourceQuery}
         onQueryChange={setSourceQuery}
         drawerOpen={drawerOpen}

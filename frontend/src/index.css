@@ -1,1 +1,12 @@
 @import "tailwindcss";
+
+/* 기본 dark:는 OS 설정만 따르므로, 직접 고른 테마도 반영되게 변형을 다시 정의한다. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root {
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+}
