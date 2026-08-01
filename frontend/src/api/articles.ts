@@ -11,6 +11,7 @@ export type Article = {
   title: string;
   url: string;
   summary: string | null;
+  author: string | null;
   publishedAt: string;
   sources: ArticleSource[];
 };

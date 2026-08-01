@@ -10,8 +10,13 @@ type Props = {
 export function ArticleCard({ article, showSourceName }: Props) {
   const publishedAt = formatPublishedAt(article.publishedAt);
   // 같은 글이 여러 소스에서 수집될 수 있어 이름을 모두 적는다.
-  const sourceNames = article.sources.map((source) => source.sourceName).join(", ");
-  const meta = showSourceName && sourceNames ? `${sourceNames} · ${publishedAt}` : publishedAt;
+  const sourceNames = article.sources.map((source) => source.sourceName);
+  // author에 블로그명을 그대로 넣는 피드가 있다. 소스 이름과 같으면 덧붙일 정보가 없다.
+  const author =
+    article.author !== null && sourceNames.includes(article.author) ? null : article.author;
+  const meta = [showSourceName ? sourceNames.join(", ") : null, author, publishedAt]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <a
