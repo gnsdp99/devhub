@@ -14,7 +14,7 @@ import com.devhub.article.domain.Article;
 import com.devhub.article.domain.ArticleCursor;
 import com.devhub.article.domain.ArticleSource;
 import com.devhub.article.domain.InvalidCursorException;
-import com.devhub.article.infra.ArticleRepository;
+import com.devhub.article.app.port.out.ArticleRepository;
 import com.devhub.source.app.SourceFinder;
 import com.devhub.source.domain.UnknownSourceException;
 import java.time.Instant;

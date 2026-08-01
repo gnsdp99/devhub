@@ -7,7 +7,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.devhub.collect.domain.FeedAddressPolicy;
 import com.devhub.collect.domain.FeedFetchException;
 import com.devhub.collect.domain.FetchResult;
-import com.devhub.support.CollectPropertiesFixture;
 import com.devhub.support.StubHttpServer;
 import com.devhub.support.TestAddressPolicyConfig;
 import com.sun.net.httpserver.Headers;
@@ -34,14 +33,14 @@ class FeedFetcherIntegrationTest {
 
     private static final DataSize MAX_BODY_SIZE = DataSize.ofKilobytes(64);
 
-    private final FeedFetcher fetcher = fetcherWith(TestAddressPolicyConfig.ALLOW_ALL);
+    private final HttpFeedFetcher fetcher = fetcherWith(TestAddressPolicyConfig.ALLOW_ALL);
 
-    private static FeedFetcher fetcherWith(FeedAddressPolicy addressPolicy) {
-        return new FeedFetcher(
+    private static HttpFeedFetcher fetcherWith(FeedAddressPolicy addressPolicy) {
+        return new HttpFeedFetcher(
                 RestClient.builder(),
                 addressPolicy,
-                CollectPropertiesFixture.of(new CollectProperties.Http(
-                        Duration.ofSeconds(5), Duration.ofSeconds(10), MAX_BODY_SIZE, 5)));
+                new FeedHttpProperties(
+                        Duration.ofSeconds(5), Duration.ofSeconds(10), MAX_BODY_SIZE, 5));
     }
 
     private StubHttpServer server;
@@ -234,7 +233,7 @@ class FeedFetcherIntegrationTest {
             requested.set(true);
             respond(exchange, 200, utf8(FEED_BODY));
         });
-        FeedFetcher blocked = fetcherWith(uri -> {
+        HttpFeedFetcher blocked = fetcherWith(uri -> {
             throw new FeedFetchException("내부 주소로는 요청하지 않습니다: " + uri);
         });
 

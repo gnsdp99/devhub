@@ -15,7 +15,8 @@ devhub:
   collect:
     enabled: ${DEVHUB_COLLECT_ENABLED:false}
     interval: ${DEVHUB_COLLECT_INTERVAL:PT30M}
-    concurrency: ${DEVHUB_COLLECT_CONCURRENCY:8}
+    execution:
+      concurrency: ${DEVHUB_COLLECT_EXECUTION_CONCURRENCY:8}
     http:
       connect-timeout: ${DEVHUB_COLLECT_HTTP_CONNECT_TIMEOUT:5s}
       read-timeout: ${DEVHUB_COLLECT_HTTP_READ_TIMEOUT:10s}

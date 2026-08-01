@@ -18,7 +18,7 @@ class FeedRepositoryIntegrationTest extends AbstractIntegrationTest {
     private static final String LAST_MODIFIED = "Wed, 29 Jul 2026 07:18:24 GMT";
 
     @Autowired
-    private FeedRepository repository;
+    private JdbcFeedRepository repository;
 
     @Nested
     @DisplayName("수집 대상 조회")

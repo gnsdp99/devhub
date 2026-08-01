@@ -10,24 +10,21 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 import com.devhub.article.domain.NewArticle;
-import com.devhub.article.infra.ArticleRepository;
+import com.devhub.article.app.ArticleWriter;
 import com.devhub.collect.domain.Feed;
 import com.devhub.collect.domain.FeedFetchException;
 import com.devhub.collect.domain.FeedParseException;
 import com.devhub.collect.domain.FetchResult;
 import com.devhub.collect.domain.ParsedArticle;
-import com.devhub.collect.infra.CollectProperties;
-import com.devhub.collect.infra.FeedFetcher;
-import com.devhub.collect.infra.FeedParser;
-import com.devhub.collect.infra.FeedRepository;
-import com.devhub.support.CollectPropertiesFixture;
+import com.devhub.collect.app.port.out.FeedCollectionExecutor;
+import com.devhub.collect.app.port.out.FeedFetcher;
+import com.devhub.collect.app.port.out.FeedParser;
+import com.devhub.collect.app.port.out.FeedRepository;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,11 +41,13 @@ class FeedCollectorUnitTest {
     private static final Duration WINDOW = Duration.ofDays(30);
     private static final byte[] BODY = "<rss/>".getBytes();
 
+    private static final FeedCollectionExecutor SEQUENTIAL = List::forEach;
+
     @Mock
     private FeedRepository feedRepository;
 
     @Mock
-    private ArticleRepository articleRepository;
+    private ArticleWriter articleWriter;
 
     @Mock
     private FeedFetcher fetcher;
@@ -60,7 +59,13 @@ class FeedCollectorUnitTest {
 
     @BeforeEach
     void setUp() {
-        collector = collectorWith(CollectPropertiesFixture.defaults());
+        collector = new FeedCollector(
+                feedRepository,
+                articleWriter,
+                fetcher,
+                parser,
+                SEQUENTIAL,
+                Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
     @Test
@@ -77,7 +82,7 @@ class FeedCollectorUnitTest {
 
         collector.collect();
 
-        then(articleRepository).should(times(2)).insertNew(anyList());
+        then(articleWriter).should(times(2)).write(anyList());
         then(feedRepository).should().markFailed(2L);
         then(feedRepository).should(never()).markFailed(1L);
         then(feedRepository).should(never()).markFailed(3L);
@@ -95,7 +100,7 @@ class FeedCollectorUnitTest {
         collector.collect();
 
         then(parser).shouldHaveNoInteractions();
-        then(articleRepository).shouldHaveNoInteractions();
+        then(articleWriter).shouldHaveNoInteractions();
         then(feedRepository).should().markUnchanged(1L);
         then(feedRepository).should(never()).markCollected(anyLong(), any(), any());
     }
@@ -121,7 +126,7 @@ class FeedCollectorUnitTest {
         givenCollectible(feed);
         givenFetched(feed);
         givenParsed(article("https://example.com/a", NOW));
-        given(articleRepository.insertNew(anyList()))
+        given(articleWriter.write(anyList()))
                 .willThrow(new DataAccessResourceFailureException("연결이 끊겼습니다."));
 
         collector.collect();
@@ -160,42 +165,6 @@ class FeedCollectorUnitTest {
         assertThat(storedUrls()).containsExactly("https://example.com/a");
     }
 
-    @Test
-    @DisplayName("동시에 가져오는 피드 수가 상한을 넘지 않는다")
-    void fetchesNoMoreFeedsAtOnceThanTheLimit() {
-        int concurrency = 2;
-        Feed[] feeds = IntStream.rangeClosed(1, 10)
-                .mapToObj(i -> feed(i, "feed-" + i))
-                .toArray(Feed[]::new);
-        givenCollectible(feeds);
-        AtomicInteger inFlight = new AtomicInteger();
-        AtomicInteger peak = new AtomicInteger();
-        given(fetcher.fetch(any(), any(), any())).willAnswer(invocation -> {
-            peak.accumulateAndGet(inFlight.incrementAndGet(), Math::max);
-            Thread.sleep(20);
-            inFlight.decrementAndGet();
-            return new FetchResult.NotModified();
-        });
-
-        collectorWith(concurrency).collect();
-
-        assertThat(peak.get()).isLessThanOrEqualTo(concurrency);
-    }
-
-    private FeedCollector collectorWith(int concurrency) {
-        return collectorWith(CollectPropertiesFixture.of(concurrency));
-    }
-
-    private FeedCollector collectorWith(CollectProperties properties) {
-        return new FeedCollector(
-                feedRepository,
-                articleRepository,
-                fetcher,
-                parser,
-                properties,
-                Clock.fixed(NOW, ZoneOffset.UTC));
-    }
-
     private void givenCollectible(Feed... feeds) {
         given(feedRepository.findCollectible()).willReturn(List.of(feeds));
     }
@@ -213,7 +182,7 @@ class FeedCollectorUnitTest {
 
     private List<String> storedUrls() {
         ArgumentCaptor<List<NewArticle>> captor = ArgumentCaptor.captor();
-        then(articleRepository).should().insertNew(captor.capture());
+        then(articleWriter).should().write(captor.capture());
         return captor.getValue().stream().map(NewArticle::url).toList();
     }
 

@@ -21,7 +21,7 @@ class FeedParserUnitTest {
 
     private static final Instant NOW = Instant.parse("2026-07-30T00:00:00Z");
 
-    private final FeedParser parser = new FeedParser(Clock.fixed(NOW, ZoneOffset.UTC));
+    private final RomeFeedParser parser = new RomeFeedParser(Clock.fixed(NOW, ZoneOffset.UTC));
 
     private List<ParsedArticle> parseFixture(String name) {
         try {

@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.devhub.article.domain.ArticleCursor;
 import com.devhub.article.domain.NewArticle;
-import com.devhub.article.infra.ArticleRepository;
+import com.devhub.article.app.port.out.ArticleRepository;
 import com.devhub.support.AbstractApiIntegrationTest;
 import java.time.Instant;
 import java.util.List;

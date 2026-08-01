@@ -1,24 +1,21 @@
 package com.devhub.collect.app;
 
 import com.devhub.article.domain.NewArticle;
-import com.devhub.article.infra.ArticleRepository;
+import com.devhub.article.app.ArticleWriter;
 import com.devhub.collect.domain.CollectionWindow;
 import com.devhub.collect.domain.Feed;
 import com.devhub.collect.domain.FeedFetchException;
 import com.devhub.collect.domain.FeedParseException;
 import com.devhub.collect.domain.FetchResult;
 import com.devhub.collect.domain.ParsedArticle;
-import com.devhub.collect.infra.CollectProperties;
-import com.devhub.collect.infra.FeedFetcher;
-import com.devhub.collect.infra.FeedParser;
-import com.devhub.collect.infra.FeedRepository;
+import com.devhub.collect.app.port.out.FeedCollectionExecutor;
+import com.devhub.collect.app.port.out.FeedFetcher;
+import com.devhub.collect.app.port.out.FeedParser;
+import com.devhub.collect.app.port.out.FeedRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -29,33 +26,16 @@ import org.springframework.stereotype.Component;
 public class FeedCollector {
 
     private final FeedRepository feedRepository;
-    private final ArticleRepository articleRepository;
+    private final ArticleWriter articleWriter;
     private final FeedFetcher fetcher;
     private final FeedParser parser;
-    private final CollectProperties properties;
+    private final FeedCollectionExecutor executor;
     private final Clock clock;
 
     public void collect() {
         List<Feed> feeds = feedRepository.findCollectible();
         log.info("피드 {}개를 수집합니다.", feeds.size());
-        Semaphore permits = new Semaphore(properties.concurrency());
-        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
-            feeds.forEach(feed -> executor.execute(() -> collectWithin(permits, feed)));
-        }
-    }
-
-    private void collectWithin(Semaphore permits, Feed feed) {
-        try {
-            permits.acquire();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return;
-        }
-        try {
-            collectOne(feed);
-        } finally {
-            permits.release();
-        }
+        executor.runAll(feeds, this::collectOne);
     }
 
     private void collectOne(Feed feed) {
@@ -75,7 +55,7 @@ public class FeedCollector {
 
     private void store(Feed feed, FetchResult.Fetched fetched) {
         List<NewArticle> articles = toNewArticles(feed, parser.parse(fetched.body()));
-        int stored = articleRepository.insertNew(articles);
+        int stored = articleWriter.write(articles);
         feedRepository.markCollected(feed.id(), fetched.etag(), fetched.lastModified());
         log.info("피드를 수집했습니다. slug={}, 신규={}건", feed.slug(), stored);
     }
