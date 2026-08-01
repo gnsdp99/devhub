@@ -23,7 +23,7 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
     private static final String URL = "https://blog.cloudflare.com/how-we-scaled-workers";
 
     @Autowired
-    private ArticleRepository repository;
+    private JdbcArticleRepository repository;
 
     @Nested
     @DisplayName("저장")

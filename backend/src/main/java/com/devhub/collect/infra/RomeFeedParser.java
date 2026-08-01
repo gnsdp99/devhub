@@ -1,5 +1,6 @@
 package com.devhub.collect.infra;
 
+import com.devhub.collect.app.port.out.FeedParser;
 import com.devhub.collect.domain.FeedParseException;
 import com.devhub.collect.domain.ParsedArticle;
 import com.rometools.rome.feed.synd.SyndContent;
@@ -23,10 +24,11 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class FeedParser {
+public class RomeFeedParser implements FeedParser {
 
     private final Clock clock;
 
+    @Override
     public List<ParsedArticle> parse(byte[] body) {
         SyndFeed feed = read(body);
         Instant now = clock.instant();

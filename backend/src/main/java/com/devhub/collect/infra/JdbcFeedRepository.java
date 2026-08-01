@@ -1,5 +1,6 @@
 package com.devhub.collect.infra;
 
+import com.devhub.collect.app.port.out.FeedRepository;
 import com.devhub.collect.domain.Feed;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -8,13 +9,14 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class FeedRepository {
+public class JdbcFeedRepository implements FeedRepository {
 
     private final JdbcClient jdbcClient;
 
     /**
      * @return 수집 대상 피드. 소스가 비활성이면 그 소스의 피드는 제외된다.
      */
+    @Override
     public List<Feed> findCollectible() {
         return jdbcClient.sql("""
                         select f.id, f.slug, f.feed_url, f.etag, f.last_modified
@@ -27,6 +29,7 @@ public class FeedRepository {
                 .list();
     }
 
+    @Override
     public void markCollected(long feedId, String etag, String lastModified) {
         jdbcClient.sql("""
                         update feed
@@ -43,6 +46,7 @@ public class FeedRepository {
                 .update();
     }
 
+    @Override
     public void markUnchanged(long feedId) {
         jdbcClient.sql("""
                         update feed
@@ -55,6 +59,7 @@ public class FeedRepository {
                 .update();
     }
 
+    @Override
     public void markFailed(long feedId) {
         jdbcClient.sql("""
                         update feed

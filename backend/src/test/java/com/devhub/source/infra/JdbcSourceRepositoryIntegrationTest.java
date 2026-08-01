@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 class SourceRepositoryIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
-    private SourceRepository repository;
+    private JdbcSourceRepository repository;
 
     @Nested
     @DisplayName("활성 소스 목록")

@@ -1,5 +1,6 @@
 package com.devhub.source.infra;
 
+import com.devhub.source.app.port.out.SourceRepository;
 import com.devhub.source.domain.Source;
 import java.util.List;
 import java.util.Optional;
@@ -9,10 +10,11 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class SourceRepository {
+public class JdbcSourceRepository implements SourceRepository {
 
     private final JdbcClient jdbcClient;
 
+    @Override
     public List<Source> findEnabled() {
         return jdbcClient.sql("""
                         select slug, name, category, site_url
@@ -27,6 +29,7 @@ public class SourceRepository {
     /**
      * @return slug를 쓰는 활성 소스의 id. 없으면 빈 값
      */
+    @Override
     public Optional<Long> findEnabledIdBySlug(String slug) {
         return jdbcClient.sql("select id from source where slug = :slug and enabled")
                 .param("slug", slug)

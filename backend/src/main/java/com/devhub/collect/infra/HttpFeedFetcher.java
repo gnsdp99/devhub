@@ -1,5 +1,6 @@
 package com.devhub.collect.infra;
 
+import com.devhub.collect.app.port.out.FeedFetcher;
 import com.devhub.collect.domain.FeedAddressPolicy;
 import com.devhub.collect.domain.FeedFetchException;
 import com.devhub.collect.domain.FetchResult;
@@ -20,20 +21,20 @@ import org.springframework.web.client.RestClientException;
 
 @Slf4j
 @Component
-public class FeedFetcher {
+public class HttpFeedFetcher implements FeedFetcher {
 
     private static final String USER_AGENT =
             "devhub-feed-collector/1.0 (+https://github.com/gnsdp99/devhub)";
 
     private final RestClient restClient;
     private final FeedAddressPolicy addressPolicy;
-    private final CollectProperties.Http http;
+    private final FeedHttpProperties http;
 
-    public FeedFetcher(
+    public HttpFeedFetcher(
             RestClient.Builder builder,
             FeedAddressPolicy addressPolicy,
-            CollectProperties properties) {
-        this.http = properties.http();
+            FeedHttpProperties http) {
+        this.http = http;
         HttpClient httpClient = HttpClient.newBuilder()
                 .connectTimeout(http.connectTimeout())
                 .followRedirects(HttpClient.Redirect.NEVER)
@@ -47,6 +48,7 @@ public class FeedFetcher {
     /**
      * @throws FeedFetchException 피드를 가져오지 못하면
      */
+    @Override
     public FetchResult fetch(String feedUrl, String etag, String lastModified) {
         URI uri = uriOf(feedUrl);
         for (int hop = 0; hop <= http.maxRedirects(); hop++) {
