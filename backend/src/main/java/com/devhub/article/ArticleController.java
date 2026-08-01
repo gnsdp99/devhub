@@ -14,10 +14,10 @@ public class ArticleController {
     private final ArticleFinder finder;
 
     @GetMapping
-    public ArticlePage findArticles(
+    public ArticlePageResponse findArticles(
             @RequestParam(required = false) String cursor,
             @RequestParam(required = false) String source,
             @RequestParam(required = false) Integer limit) {
-        return finder.findPage(cursor, source, limit);
+        return ArticlePageResponse.from(finder.findPage(cursor, source, limit));
     }
 }

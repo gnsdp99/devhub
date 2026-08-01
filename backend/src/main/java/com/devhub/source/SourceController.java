@@ -14,7 +14,7 @@ public class SourceController {
     private final SourceRepository repository;
 
     @GetMapping
-    public List<Source> findSources() {
-        return repository.findEnabled();
+    public List<SourceResponse> findSources() {
+        return repository.findEnabled().stream().map(SourceResponse::from).toList();
     }
 }
