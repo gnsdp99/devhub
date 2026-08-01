@@ -12,23 +12,19 @@ public final class CollectPropertiesFixture {
     private CollectPropertiesFixture() {
     }
 
-    public static CollectProperties of(Duration window) {
-        return of(window, HTTP);
+    public static CollectProperties defaults() {
+        return of(8, HTTP);
+    }
+
+    public static CollectProperties of(int concurrency) {
+        return of(concurrency, HTTP);
     }
 
     public static CollectProperties of(CollectProperties.Http http) {
-        return of(Duration.ofDays(30), http);
+        return of(8, http);
     }
 
-    public static CollectProperties of(Duration window, int concurrency) {
-        return of(window, concurrency, HTTP);
-    }
-
-    public static CollectProperties of(Duration window, CollectProperties.Http http) {
-        return of(window, 8, http);
-    }
-
-    public static CollectProperties of(Duration window, int concurrency, CollectProperties.Http http) {
-        return new CollectProperties(false, Duration.ofMinutes(30), window, concurrency, http);
+    public static CollectProperties of(int concurrency, CollectProperties.Http http) {
+        return new CollectProperties(false, Duration.ofMinutes(30), concurrency, http);
     }
 }

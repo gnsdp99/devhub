@@ -8,7 +8,6 @@ import org.springframework.util.unit.DataSize;
 public record CollectProperties(
         boolean enabled,
         Duration interval,
-        Duration window,
         int concurrency,
         Http http) {
 

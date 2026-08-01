@@ -52,7 +52,7 @@ public class FeedCollector {
         try {
             FetchResult result = fetcher.fetch(feed.feedUrl(), feed.etag(), feed.lastModified());
             switch (result) {
-                case FetchResult.NotModified ignored -> feedRepository.markUnchanged(feed.id());
+                case FetchResult.NotModified _ -> feedRepository.markUnchanged(feed.id());
                 case FetchResult.Fetched fetched -> store(feed, fetched);
             }
         } catch (FeedFetchException | FeedParseException e) {
@@ -71,10 +71,10 @@ public class FeedCollector {
     }
 
     private List<NewArticle> toNewArticles(Feed feed, List<ParsedArticle> parsed) {
-        Instant oldest = clock.instant().minus(properties.window());
+        Instant now = clock.instant();
         List<NewArticle> articles = new ArrayList<>();
         for (ParsedArticle article : parsed) {
-            if (article.publishedAt().isBefore(oldest)) {
+            if (!CollectionWindow.includes(article.publishedAt(), now)) {
                 continue;
             }
             try {
