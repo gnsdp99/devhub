@@ -1,6 +1,7 @@
 import { useParams } from "react-router";
 import { ArticleFeed } from "../components/ArticleFeed";
 import { FeedHeader } from "../components/FeedHeader";
+import { useDocumentTitle } from "../lib/useDocumentTitle";
 import { useAppLayout } from "./AppLayout";
 
 export function SourcePage() {
@@ -9,11 +10,13 @@ export function SourcePage() {
 
   const source = sources?.find((candidate) => candidate.slug === slug);
   const isUnknown = sources !== undefined && source === undefined;
+  const title = isUnknown ? "알 수 없는 소스" : (source?.name ?? "");
+  useDocumentTitle(title);
 
   return (
     <>
       <FeedHeader
-        title={isUnknown ? "알 수 없는 소스" : (source?.name ?? "")}
+        title={title}
         siteUrl={source?.siteUrl}
         sidebarOpen={sidebarOpen}
         onMenuClick={toggleSidebar}
