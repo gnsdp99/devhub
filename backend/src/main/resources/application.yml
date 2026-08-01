@@ -1,6 +1,9 @@
 spring:
   application:
     name: devhub
+  mvc:
+    problemdetails:
+      enabled: true
   threads:
     virtual:
       enabled: true
