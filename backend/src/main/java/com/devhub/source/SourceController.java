@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class SourceController {
 
-    private final SourceRepository repository;
+    private final SourceFinder finder;
 
     @GetMapping
     public List<SourceResponse> findSources() {
-        return repository.findEnabled().stream().map(SourceResponse::from).toList();
+        return finder.findEnabled().stream().map(SourceResponse::from).toList();
     }
 }

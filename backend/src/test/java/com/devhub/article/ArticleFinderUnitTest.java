@@ -10,7 +10,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
-import com.devhub.source.SourceRepository;
+import com.devhub.source.SourceFinder;
 import com.devhub.source.UnknownSourceException;
 import java.time.Instant;
 import java.util.List;
@@ -35,13 +35,13 @@ class ArticleFinderUnitTest {
     private ArticleRepository repository;
 
     @Mock
-    private SourceRepository sourceRepository;
+    private SourceFinder sourceFinder;
 
     private ArticleFinder finder;
 
     @BeforeEach
     void setUp() {
-        finder = new ArticleFinder(repository, sourceRepository);
+        finder = new ArticleFinder(repository, sourceFinder);
     }
 
     @Nested
@@ -132,7 +132,7 @@ class ArticleFinderUnitTest {
         @Test
         @DisplayName("slug를 소스 id로 바꿔 저장소에 넘긴다")
         void isTurnedIntoASourceIdBeforeReachingTheRepository() {
-            given(sourceRepository.findEnabledIdBySlug(SOURCE)).willReturn(Optional.of(7L));
+            given(sourceFinder.requireEnabledIdBySlug(SOURCE)).willReturn(7L);
 
             finder.findPage(null, SOURCE, null);
 
@@ -142,7 +142,8 @@ class ArticleFinderUnitTest {
         @Test
         @DisplayName("그런 활성 소스가 없으면 조회하지 않고 예외를 던진다")
         void skipsTheQueryWhenNoSuchEnabledSourceExists() {
-            given(sourceRepository.findEnabledIdBySlug(SOURCE)).willReturn(Optional.empty());
+            given(sourceFinder.requireEnabledIdBySlug(SOURCE))
+                    .willThrow(new UnknownSourceException(SOURCE));
 
             assertThatThrownBy(() -> finder.findPage(null, SOURCE, null))
                     .isInstanceOf(UnknownSourceException.class);
@@ -155,7 +156,7 @@ class ArticleFinderUnitTest {
         void isNotLookedUpWhenNoSourceIsGiven() {
             finder.findPage(null, null, null);
 
-            then(sourceRepository).shouldHaveNoInteractions();
+            then(sourceFinder).shouldHaveNoInteractions();
         }
     }
 

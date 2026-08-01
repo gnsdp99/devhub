@@ -1,6 +1,6 @@
 package com.devhub.article;
 
-import com.devhub.source.SourceRepository;
+import com.devhub.source.SourceFinder;
 import com.devhub.source.UnknownSourceException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +15,7 @@ public class ArticleFinder {
     static final int MAX_LIMIT = 50;
 
     private final ArticleRepository repository;
-    private final SourceRepository sourceRepository;
+    private final SourceFinder sourceFinder;
 
     /**
      * @param cursor 이전 페이지의 nextCursor. 첫 페이지면 null
@@ -46,7 +46,6 @@ public class ArticleFinder {
         if (slug == null) {
             return null;
         }
-        return sourceRepository.findEnabledIdBySlug(slug)
-                .orElseThrow(() -> new UnknownSourceException(slug));
+        return sourceFinder.requireEnabledIdBySlug(slug);
     }
 }
