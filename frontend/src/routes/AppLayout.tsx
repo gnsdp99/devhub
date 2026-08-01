@@ -4,11 +4,14 @@ import { Outlet, useOutletContext } from "react-router";
 import { fetchSources, type Source } from "../api/sources";
 import { Sidebar } from "../components/Sidebar";
 import { useMediaQuery } from "../lib/useMediaQuery";
+import { type Theme, useTheme } from "../lib/useTheme";
 
 export type AppLayoutContext = {
   sources: Source[] | undefined;
   sidebarOpen: boolean;
   toggleSidebar: () => void;
+  theme: Theme;
+  toggleTheme: () => void;
 };
 
 export function useAppLayout(): AppLayoutContext {
@@ -26,6 +29,7 @@ function sidebarMessage(offline: boolean, failed: boolean): string | undefined {
 }
 
 export function AppLayout() {
+  const { theme, toggle: toggleTheme } = useTheme();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [desktopOpen, setDesktopOpen] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -51,10 +55,12 @@ export function AppLayout() {
     sources: sources.data,
     sidebarOpen: isDesktop ? desktopOpen : drawerOpen,
     toggleSidebar,
+    theme,
+    toggleTheme,
   };
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-white text-neutral-900">
+    <div className="flex h-dvh overflow-hidden bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
       {drawerOpen && (
         <button
           type="button"

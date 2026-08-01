@@ -23,19 +23,21 @@ export function ArticleCard({ article, showSourceName }: Props) {
       href={article.url}
       target="_blank"
       rel="noreferrer"
-      className="relative block flex-none rounded-xl border border-neutral-200 bg-white py-3.5 pl-4 pr-10 transition-colors hover:border-neutral-400 hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900 lg:py-4"
+      className="relative block flex-none rounded-xl border border-neutral-200 bg-white py-3.5 pl-4 pr-10 transition-colors hover:border-neutral-400 hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900 lg:py-4 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-neutral-600 dark:hover:bg-neutral-800 dark:focus-visible:outline-neutral-100"
     >
-      <h3 className="line-clamp-2 text-[15px] font-medium leading-snug text-neutral-900 lg:text-base">
+      <h3 className="line-clamp-2 text-[15px] font-medium leading-snug text-neutral-900 lg:text-base dark:text-neutral-100">
         {article.title}
       </h3>
       {article.summary && (
         // 요약이 없는 피드는 본문 전체가 넘어오기도 해서 줄 수를 묶어 둔다.
-        <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-neutral-600 lg:text-sm">
+        <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-neutral-600 lg:text-sm dark:text-neutral-300">
           {article.summary}
         </p>
       )}
-      <p className="mt-1.5 truncate text-xs text-neutral-500 lg:text-[13px]">{meta}</p>
-      <ExternalLinkIcon className="absolute right-3 top-3.5 size-4 text-neutral-300" />
+      <p className="mt-1.5 truncate text-xs text-neutral-500 lg:text-[13px] dark:text-neutral-400">
+        {meta}
+      </p>
+      <ExternalLinkIcon className="absolute right-3 top-3.5 size-4 text-neutral-300 dark:text-neutral-600" />
     </a>
   );
 }

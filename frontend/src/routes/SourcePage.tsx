@@ -6,7 +6,7 @@ import { useAppLayout } from "./AppLayout";
 
 export function SourcePage() {
   const { slug = "" } = useParams();
-  const { sources, sidebarOpen, toggleSidebar } = useAppLayout();
+  const { sources, sidebarOpen, toggleSidebar, theme, toggleTheme } = useAppLayout();
 
   const source = sources?.find((candidate) => candidate.slug === slug);
   const isUnknown = sources !== undefined && source === undefined;
@@ -20,10 +20,12 @@ export function SourcePage() {
         siteUrl={source?.siteUrl}
         sidebarOpen={sidebarOpen}
         onMenuClick={toggleSidebar}
+        theme={theme}
+        onThemeToggle={toggleTheme}
       />
       {isUnknown ? (
         <div className="flex flex-1 items-center justify-center px-6 text-center">
-          <p className="text-sm text-neutral-500">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
             "{slug}" 소스를 찾을 수 없어요. 왼쪽 목록에서 다시 골라 주세요.
           </p>
         </div>

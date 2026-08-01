@@ -4,6 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>devhub</title>
+    <script>
+      // 첫 페인트 전에 테마를 정해야 밝은 화면이 번쩍이지 않는다.
+      (() => {
+        let stored = null;
+        try {
+          stored = localStorage.getItem("devhub-theme");
+        } catch {}
+        const system = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.dataset.theme = stored === "light" || stored === "dark" ? stored : system;
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
