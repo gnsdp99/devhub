@@ -1,6 +1,6 @@
 package com.devhub.support;
 
-import com.devhub.collect.CollectProperties;
+import com.devhub.collect.infra.CollectProperties;
 import java.time.Duration;
 import org.springframework.util.unit.DataSize;
 
