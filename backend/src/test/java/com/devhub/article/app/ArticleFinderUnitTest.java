@@ -172,6 +172,7 @@ class ArticleFinderUnitTest {
                         "제목 " + i,
                         "https://example.com/" + i,
                         null,
+                        null,
                         PUBLISHED_AT.minusSeconds(i),
                         List.of(new ArticleSource(SOURCE, SOURCE, SOURCE_NAME))))
                 .toList();
