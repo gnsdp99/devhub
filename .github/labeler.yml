@@ -1,0 +1,19 @@
+BE:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'backend/**'
+
+FE:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'frontend/**'
+
+INFRA:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/workflows/*-ci.yml'
+          - '.github/workflows/*-cd.yml'
+          - 'deploy/**'
+          - 'compose*.yaml'
+          - 'backend/Dockerfile'
+          - 'backend/.dockerignore'
