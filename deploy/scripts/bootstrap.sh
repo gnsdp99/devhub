@@ -12,9 +12,10 @@ SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEPLOY_DIR="$(cd "$SRC_DIR/.." && pwd)"
 REPO_DIR="$(cd "$DEPLOY_DIR/.." && pwd)"
 COMPOSE_VERSION="${COMPOSE_VERSION:-v5.3.1}"
+PYTHON="${PYTHON:-python3.12}"
 
 dnf -y update
-dnf -y install docker nginx python3 augeas-libs
+dnf -y install docker nginx "$PYTHON" augeas-libs
 
 install -d /usr/libexec/docker/cli-plugins
 curl -fsSL \
@@ -29,7 +30,7 @@ install -m 755 "$SRC_DIR/deploy.sh" "$SRC_DIR/render-env.sh" "$APP_DIR/"
 install -m 644 "$REPO_DIR/compose.prod.yaml" "$APP_DIR/"
 
 # 80번 포트를 열지 않으므로 HTTP-01 대신 Cloudflare DNS-01 챌린지를 쓴다.
-python3 -m venv /opt/certbot
+"$PYTHON" -m venv /opt/certbot
 /opt/certbot/bin/pip install --quiet --upgrade pip
 /opt/certbot/bin/pip install --quiet certbot certbot-dns-cloudflare
 ln -sf /opt/certbot/bin/certbot /usr/local/bin/certbot
