@@ -164,6 +164,7 @@ public class JdbcArticleRepository implements ArticleRepository {
         return jdbcClient.sql(SOURCES_SQL)
                 .param("articleIds", articleIds)
                 .query(SourceRow.class)
+                .list()
                 .stream()
                 .collect(Collectors.groupingBy(
                         SourceRow::articleId,
