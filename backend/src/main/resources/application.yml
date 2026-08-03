@@ -1,6 +1,11 @@
+server:
+  shutdown: graceful
+
 spring:
   application:
     name: devhub
+  lifecycle:
+    timeout-per-shutdown-phase: 15s
   mvc:
     problemdetails:
       enabled: true

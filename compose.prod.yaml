@@ -3,6 +3,7 @@ services:
     image: ${DEVHUB_IMAGE:?Image reference is required}
     restart: unless-stopped
     env_file: .env
+    stop_grace_period: 20s
     deploy:
       resources:
         limits:
