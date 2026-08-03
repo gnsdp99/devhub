@@ -1,0 +1,17 @@
+services:
+  api:
+    image: ${DEVHUB_IMAGE:?Image reference is required}
+    restart: unless-stopped
+    env_file: .env
+    deploy:
+      resources:
+        limits:
+          memory: ${DEVHUB_MEM_LIMIT:-1500m}
+    ports:
+      - "127.0.0.1:8080:8080"
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${AWS_REGION:-ap-northeast-2}
+        awslogs-group: /devhub/api
+        awslogs-create-group: "true"
