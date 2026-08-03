@@ -29,7 +29,40 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v6
 
+      - run: |
+          unclassified=$(grep -rlE '@Test\b' src/test/java | grep -vE '(UnitTest|IntegrationTest)\.java$' || true)
+          if [ -n "$unclassified" ]; then
+            echo "테스트 클래스명은 *UnitTest 또는 *IntegrationTest로 끝나야 합니다." >&2
+            echo "$unclassified" >&2
+            exit 1
+          fi
+
       - run: ./gradlew build
+
+      - if: always()
+        run: |
+          unit=0
+          integration=0
+          failed=0
+          for xml in build/test-results/test/*.xml; do
+            [ -e "$xml" ] || continue
+            attr() { grep -o " $1=\"[0-9]*\"" "$xml" | head -1 | grep -o '[0-9]*'; }
+            failed=$((failed + $(attr failures) + $(attr errors)))
+            case "$(basename "$xml" .xml)" in
+              *UnitTest | *UnitTest\$*) unit=$((unit + $(attr tests))) ;;
+              *) integration=$((integration + $(attr tests))) ;;
+            esac
+          done
+          {
+            echo "## 테스트 결과"
+            echo
+            echo "| 구분 | 개수 |"
+            echo "| --- | ---: |"
+            echo "| 단위 | $unit |"
+            echo "| 통합 | $integration |"
+            echo "| 합계 | $((unit + integration)) |"
+            echo "| 실패 | $failed |"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - if: github.event_name == 'pull_request'
         uses: docker/setup-qemu-action@v4
