@@ -7,12 +7,33 @@ on:
       - 'frontend/**'
       - '.github/workflows/frontend-ci.yml'
   pull_request:
-    paths:
-      - 'frontend/**'
-      - '.github/workflows/frontend-ci.yml'
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          changed=$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" \
+            --paginate --jq '.[].filename')
+          if echo "$changed" | grep -qE '^(frontend/|\.github/workflows/frontend-)'; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
+    name: frontend
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
