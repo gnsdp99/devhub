@@ -1,0 +1,41 @@
+name: frontend-cd
+
+on:
+  workflow_run:
+    workflows: [frontend-ci]
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
+  id-token: write
+
+jobs:
+  deploy:
+    if: >-
+      github.event.workflow_run.conclusion == 'success'
+      && github.event.workflow_run.event == 'push'
+      && github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: frontend-dist
+          path: dist
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - run: |
+          aws s3 sync dist/ "s3://${{ vars.S3_BUCKET }}" --delete \
+            --exclude index.html \
+            --cache-control 'public, max-age=31536000, immutable'
+          aws s3 cp dist/index.html "s3://${{ vars.S3_BUCKET }}/index.html" \
+            --cache-control 'no-cache'
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" \
+            --paths /index.html
