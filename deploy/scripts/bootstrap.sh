@@ -9,6 +9,8 @@ REGION="${AWS_REGION:-ap-northeast-2}"
 HOST_SSM_PREFIX="${HOST_SSM_PREFIX:-/devhub/host}"
 APP_DIR="${APP_DIR:-/opt/devhub}"
 SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DEPLOY_DIR="$(cd "$SRC_DIR/.." && pwd)"
+REPO_DIR="$(cd "$DEPLOY_DIR/.." && pwd)"
 COMPOSE_VERSION="${COMPOSE_VERSION:-v5.3.1}"
 
 dnf -y update
@@ -24,7 +26,7 @@ systemctl enable --now docker
 
 install -d -m 755 "$APP_DIR"
 install -m 755 "$SRC_DIR/deploy.sh" "$SRC_DIR/render-env.sh" "$APP_DIR/"
-install -m 644 "$SRC_DIR/../compose.prod.yaml" "$APP_DIR/"
+install -m 644 "$REPO_DIR/compose.prod.yaml" "$APP_DIR/"
 
 # 80번 포트를 열지 않으므로 HTTP-01 대신 Cloudflare DNS-01 챌린지를 쓴다.
 python3 -m venv /opt/certbot
@@ -47,7 +49,7 @@ certbot certonly \
     --dns-cloudflare-propagation-seconds 30 \
     -d "$ORIGIN_DOMAIN"
 
-sed "s/ORIGIN_DOMAIN/$ORIGIN_DOMAIN/g" "$SRC_DIR/nginx/devhub-origin.conf" \
+sed "s/ORIGIN_DOMAIN/$ORIGIN_DOMAIN/g" "$DEPLOY_DIR/nginx/devhub-origin.conf" \
     >/etc/nginx/conf.d/devhub-origin.conf
 nginx -t
 systemctl enable --now nginx
