@@ -9,8 +9,9 @@ type Props = {
   onThemeToggle: () => void;
 };
 
+// 테두리 없이 호버 배경만으로 누를 수 있음을 알린다.
 const ICON_BUTTON =
-  "flex size-8 flex-none items-center justify-center rounded-lg border border-neutral-300 text-neutral-700 transition-colors hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800";
+  "flex size-8 flex-none items-center justify-center rounded-lg text-neutral-700 transition-colors hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800";
 
 /** 사이드바와 본문 위를 가로지르는 전역 바. 어느 화면에서나 같은 자리에 남는다. */
 export function TopBar({ sidebarOpen, onMenuClick, theme, onThemeToggle }: Props) {

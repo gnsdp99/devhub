@@ -27,8 +27,8 @@ export function FeedHeader({ title, siteUrl }: Props) {
             rel="noreferrer"
             className="flex flex-none items-center gap-1.5 text-neutral-500 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
           >
-            <span className="flex size-6 items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700">
-              <ExternalLinkIcon className="size-3.5" />
+            <span className="flex size-6 items-center justify-center">
+              <ExternalLinkIcon className="size-4" />
             </span>
             <span className="hidden text-xs lg:inline">원본 사이트</span>
           </a>
