@@ -38,7 +38,7 @@ export function MenuIcon({ className }: IconProps) {
   );
 }
 
-export function CloseIcon({ className }: IconProps) {
+export function ChevronLeftIcon({ className }: IconProps) {
   return (
     <svg
       className={className}
@@ -47,10 +47,11 @@ export function CloseIcon({ className }: IconProps) {
       stroke="currentColor"
       strokeWidth="1.5"
       strokeLinecap="round"
+      strokeLinejoin="round"
       aria-hidden="true"
       focusable="false"
     >
-      <path d="M5 5l10 10M15 5L5 15" />
+      <path d="M12.5 4.5 7 10l5.5 5.5" />
     </svg>
   );
 }

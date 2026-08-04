@@ -1,6 +1,6 @@
 import { NavLink } from "react-router";
 import type { Source } from "../api/sources";
-import { CloseIcon } from "./icons";
+import { ChevronLeftIcon } from "./icons";
 
 type Props = {
   sources: Source[] | undefined;
@@ -56,9 +56,9 @@ export function Sidebar({
           type="button"
           onClick={onClose}
           aria-label="소스 목록 닫기"
-          className="flex size-7 flex-none items-center justify-center rounded-md border border-neutral-300 text-neutral-600 transition-colors hover:bg-neutral-200 lg:hidden dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+          className="flex size-7 flex-none items-center justify-center rounded-md border border-neutral-300 text-neutral-600 transition-colors hover:bg-neutral-200 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
         >
-          <CloseIcon className="size-4" />
+          <ChevronLeftIcon className="size-4" />
         </button>
       </div>
 

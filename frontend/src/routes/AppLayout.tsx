@@ -48,6 +48,15 @@ export function AppLayout() {
     }
   }
 
+  // 사이드바 안의 닫기 버튼. 데스크톱은 칸을 접고, 모바일은 드로어를 밀어 넣는다.
+  function closeSidebar() {
+    if (isDesktop) {
+      setDesktopOpen(false);
+    } else {
+      setDrawerOpen(false);
+    }
+  }
+
   const context: AppLayoutContext = { sources: sources.data };
 
   return (
@@ -78,7 +87,7 @@ export function AppLayout() {
           onQueryChange={setSourceQuery}
           drawerOpen={drawerOpen}
           desktopOpen={desktopOpen}
-          onClose={() => setDrawerOpen(false)}
+          onClose={closeSidebar}
           onSelect={() => setDrawerOpen(false)}
         />
 
