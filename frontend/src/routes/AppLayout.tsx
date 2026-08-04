@@ -1,17 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { type CSSProperties, useState } from "react";
 import { Outlet, useOutletContext } from "react-router";
 import { fetchSources, type Source } from "../api/sources";
 import { Sidebar } from "../components/Sidebar";
+import { TopBar } from "../components/TopBar";
 import { useMediaQuery } from "../lib/useMediaQuery";
-import { type Theme, useTheme } from "../lib/useTheme";
+import { useTheme } from "../lib/useTheme";
 
 export type AppLayoutContext = {
   sources: Source[] | undefined;
-  sidebarOpen: boolean;
-  toggleSidebar: () => void;
-  theme: Theme;
-  toggleTheme: () => void;
 };
 
 export function useAppLayout(): AppLayoutContext {
@@ -51,40 +48,58 @@ export function AppLayout() {
     }
   }
 
-  const context: AppLayoutContext = {
-    sources: sources.data,
-    sidebarOpen: isDesktop ? desktopOpen : drawerOpen,
-    toggleSidebar,
-    theme,
-    toggleTheme,
-  };
+  // 사이드바 안의 닫기 버튼. 데스크톱은 칸을 접고, 모바일은 드로어를 밀어 넣는다.
+  function closeSidebar() {
+    if (isDesktop) {
+      setDesktopOpen(false);
+    } else {
+      setDrawerOpen(false);
+    }
+  }
+
+  const context: AppLayoutContext = { sources: sources.data };
+  // 사이드바가 실제로 자리를 차지할 때만 폭을 알린다. 모바일 드로어는 본문 위에 떠서 0이다.
+  const sidebarWidth = isDesktop && desktopOpen ? "238px" : "0px";
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
-      {drawerOpen && (
-        <button
-          type="button"
-          onClick={() => setDrawerOpen(false)}
-          aria-label="사이드바 닫기"
-          className="fixed inset-0 z-30 cursor-default bg-neutral-900/50 lg:hidden"
-        />
-      )}
-
-      <Sidebar
-        sources={sources.data}
-        isPending={sources.isPending && !sourcesOffline}
-        errorMessage={sidebarMessage(sourcesOffline, sources.error !== null)}
-        query={sourceQuery}
-        onQueryChange={setSourceQuery}
-        drawerOpen={drawerOpen}
-        desktopOpen={desktopOpen}
-        onClose={() => setDrawerOpen(false)}
-        onSelect={() => setDrawerOpen(false)}
+    <div
+      style={{ "--sidebar-w": sidebarWidth } as CSSProperties}
+      className="flex h-dvh flex-col overflow-hidden bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100"
+    >
+      <TopBar
+        sidebarOpen={isDesktop ? desktopOpen : drawerOpen}
+        onMenuClick={toggleSidebar}
+        theme={theme}
+        onThemeToggle={toggleTheme}
       />
 
-      <main className="flex min-w-0 flex-1 flex-col">
-        <Outlet context={context} />
-      </main>
+      {/* 드로어와 덮개는 이 칸을 기준으로 잡혀서 헤더바를 가리지 않는다. */}
+      <div className="relative flex min-h-0 flex-1">
+        {drawerOpen && (
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(false)}
+            aria-label="사이드바 닫기"
+            className="absolute inset-0 z-30 cursor-default bg-neutral-900/50 lg:hidden"
+          />
+        )}
+
+        <Sidebar
+          sources={sources.data}
+          isPending={sources.isPending && !sourcesOffline}
+          errorMessage={sidebarMessage(sourcesOffline, sources.error !== null)}
+          query={sourceQuery}
+          onQueryChange={setSourceQuery}
+          drawerOpen={drawerOpen}
+          desktopOpen={desktopOpen}
+          onClose={closeSidebar}
+          onSelect={() => setDrawerOpen(false)}
+        />
+
+        <main className="flex min-w-0 flex-1 flex-col">
+          <Outlet context={context} />
+        </main>
+      </div>
     </div>
   );
 }

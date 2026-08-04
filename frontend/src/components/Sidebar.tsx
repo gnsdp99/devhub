@@ -1,6 +1,6 @@
 import { NavLink } from "react-router";
 import type { Source } from "../api/sources";
-import { CloseIcon } from "./icons";
+import { ChevronLeftIcon } from "./icons";
 
 type Props = {
   sources: Source[] | undefined;
@@ -12,13 +12,6 @@ type Props = {
   desktopOpen: boolean;
   onClose: () => void;
   onSelect: () => void;
-};
-
-type Entry = {
-  key: string;
-  name: string;
-  to: string;
-  end: boolean;
 };
 
 const SKELETON_KEYS = ["a", "b", "c", "d", "e", "f"];
@@ -34,32 +27,23 @@ export function Sidebar({
   onClose,
   onSelect,
 }: Props) {
-  const entries: Entry[] = [
-    { key: "__all__", name: "전체", to: "/", end: true },
-    ...(sources ?? []).map((source) => ({
-      key: source.slug,
-      name: source.name,
-      to: `/sources/${source.slug}`,
-      end: false,
-    })),
-  ];
-
   const keyword = query.trim().toLowerCase();
+  const entries = sources ?? [];
   const visible = keyword
-    ? entries.filter((entry) => entry.name.toLowerCase().includes(keyword))
+    ? entries.filter((source) => source.name.toLowerCase().includes(keyword))
     : entries;
 
   return (
     <aside
       className={[
-        "fixed inset-y-0 left-0 z-40 flex w-[270px] flex-col border-r border-neutral-200 bg-neutral-50 transition-transform duration-200 ease-out",
+        "absolute inset-y-0 left-0 z-40 flex w-[270px] flex-col border-r border-neutral-200 bg-neutral-50 transition-transform duration-200 ease-out",
         "dark:border-neutral-800 dark:bg-neutral-900",
         "lg:static lg:z-auto lg:w-[238px] lg:translate-x-0 lg:shadow-none lg:transition-none",
         drawerOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full",
         desktopOpen ? "lg:flex" : "lg:hidden",
       ].join(" ")}
     >
-      <div className="flex flex-none items-center gap-2 border-b border-neutral-200 p-3 dark:border-neutral-800">
+      <div className="flex h-14 flex-none items-center gap-2 border-b border-neutral-200 px-3 dark:border-neutral-800">
         <input
           type="search"
           value={query}
@@ -72,9 +56,9 @@ export function Sidebar({
           type="button"
           onClick={onClose}
           aria-label="소스 목록 닫기"
-          className="flex size-7 flex-none items-center justify-center rounded-md border border-neutral-300 text-neutral-600 transition-colors hover:bg-neutral-200 lg:hidden dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+          className="flex size-7 flex-none items-center justify-center rounded-md text-neutral-600 transition-colors hover:bg-neutral-200 dark:text-neutral-300 dark:hover:bg-neutral-800"
         >
-          <CloseIcon className="size-4" />
+          <ChevronLeftIcon className="size-4" />
         </button>
       </div>
 
@@ -98,11 +82,10 @@ export function Sidebar({
           </p>
         )}
 
-        {visible.map((entry) => (
+        {visible.map((source) => (
           <NavLink
-            key={entry.key}
-            to={entry.to}
-            end={entry.end}
+            key={source.slug}
+            to={`/sources/${source.slug}`}
             onClick={onSelect}
             className={({ isActive }) =>
               [
@@ -113,7 +96,7 @@ export function Sidebar({
               ].join(" ")
             }
           >
-            {entry.name}
+            {source.name}
           </NavLink>
         ))}
       </nav>

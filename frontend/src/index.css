@@ -1,7 +1,14 @@
 @import "tailwindcss";
+/* 통짜 한글 폰트는 2MB가 넘는다. 동적 서브셋은 unicode-range로 92조각을 나눠 두어 화면에 실제로 그리는 글자가 든 조각만 내려받는다. */
+@import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 
 /* 기본 dark:는 OS 설정만 따르므로, 직접 고른 테마도 반영되게 변형을 다시 정의한다. */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  /* 내려받기 전에는 OS 기본 폰트로 그린다. */
+  --font-sans: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+}
 
 :root {
   color-scheme: light;

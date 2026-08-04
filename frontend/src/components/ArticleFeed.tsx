@@ -1,6 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { fetchArticles } from "../api/articles";
+import { READING_COLUMN } from "../lib/layout";
 import { ArticleCard } from "./ArticleCard";
 import {
   CardSkeletons,
@@ -63,32 +64,32 @@ export function ArticleFeed({ source, showSourceName }: Props) {
   const articles = data?.pages.flatMap((page) => page.items) ?? [];
 
   return (
-    <div
-      ref={scrollRef}
-      className="flex flex-1 flex-col gap-2.5 overflow-y-auto p-3 lg:gap-3 lg:p-4"
-    >
-      {status === "pending" && (offline ? <OfflineFeed /> : <CardSkeletons count={4} />)}
+    // 스크롤은 폭 전체가 받고, 읽는 폭만 안쪽에서 묶는다. 사이드바를 접어도 한 줄 길이가 그대로다.
+    <div ref={scrollRef} className="flex-1 overflow-y-auto py-3 lg:py-4">
+      <div className={`${READING_COLUMN} flex min-h-full flex-col gap-2.5 px-3 lg:gap-3 lg:px-4`}>
+        {status === "pending" && (offline ? <OfflineFeed /> : <CardSkeletons count={4} />)}
 
-      {status !== "pending" && data === undefined && (
-        // 서버 detail은 ApiError에 담겨 콘솔로만 가고, 화면 문구는 여기서 정한다.
-        <FeedErrorState message="글을 불러오지 못했어요" onRetry={() => refetch()} />
-      )}
+        {status !== "pending" && data === undefined && (
+          // 서버 detail은 ApiError에 담겨 콘솔로만 가고, 화면 문구는 여기서 정한다.
+          <FeedErrorState message="글을 불러오지 못했어요" onRetry={() => refetch()} />
+        )}
 
-      {data !== undefined && articles.length === 0 && <EmptyFeed scoped={source !== undefined} />}
+        {data !== undefined && articles.length === 0 && <EmptyFeed scoped={source !== undefined} />}
 
-      {articles.map((article) => (
-        <ArticleCard key={article.id} article={article} showSourceName={showSourceName} />
-      ))}
+        {articles.map((article) => (
+          <ArticleCard key={article.id} article={article} showSourceName={showSourceName} />
+        ))}
 
-      {isFetchingNextPage && <CardSkeletons count={2} />}
+        {isFetchingNextPage && <CardSkeletons count={2} />}
 
-      {data !== undefined && error !== null && (
-        <FeedErrorBlock message="다음 글을 불러오지 못했어요" onRetry={() => fetchNextPage()} />
-      )}
+        {data !== undefined && error !== null && (
+          <FeedErrorBlock message="다음 글을 불러오지 못했어요" onRetry={() => fetchNextPage()} />
+        )}
 
-      {data !== undefined && offline && <OfflineBlock />}
+        {data !== undefined && offline && <OfflineBlock />}
 
-      <div ref={sentinelRef} className="h-px flex-none" />
+        <div ref={sentinelRef} className="h-px flex-none" />
+      </div>
     </div>
   );
 }
