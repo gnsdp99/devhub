@@ -54,6 +54,8 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-ec2
     env:
       IMAGE: ${{ needs.build.outputs.image }}
       INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}

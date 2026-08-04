@@ -1,0 +1,31 @@
+name: infra-cd
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'deploy/**'
+      - 'compose.prod.yaml'
+      - '.github/workflows/infra-cd.yml'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-ec2
+    env:
+      INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+      SHA: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - run: deploy/scripts/ssm-deploy.sh
