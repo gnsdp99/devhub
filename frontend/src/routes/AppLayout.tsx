@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { type CSSProperties, useState } from "react";
 import { Outlet, useOutletContext } from "react-router";
 import { fetchSources, type Source } from "../api/sources";
 import { Sidebar } from "../components/Sidebar";
@@ -58,9 +58,14 @@ export function AppLayout() {
   }
 
   const context: AppLayoutContext = { sources: sources.data };
+  // 사이드바가 실제로 자리를 차지할 때만 폭을 알린다. 모바일 드로어는 본문 위에 떠서 0이다.
+  const sidebarWidth = isDesktop && desktopOpen ? "238px" : "0px";
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
+    <div
+      style={{ "--sidebar-w": sidebarWidth } as CSSProperties}
+      className="flex h-dvh flex-col overflow-hidden bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100"
+    >
       <TopBar
         sidebarOpen={isDesktop ? desktopOpen : drawerOpen}
         onMenuClick={toggleSidebar}

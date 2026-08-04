@@ -1,3 +1,4 @@
+import { READING_COLUMN } from "../lib/layout";
 import { ExternalLinkIcon } from "./icons";
 
 type Props = {
@@ -9,9 +10,9 @@ type Props = {
 export function FeedHeader({ title, siteUrl }: Props) {
   return (
     // h-14는 사이드바 검색줄과 같은 높이다. 두 칸의 경계선이 한 줄로 이어진다.
-    <div className="h-14 flex-none border-b border-neutral-200 px-3 lg:px-4 dark:border-neutral-800">
-      {/* 경계선은 폭 전체를 긋되, 제목은 카드와 같은 폭 안에 두어 왼쪽 끝이 맞는다. */}
-      <div className="mx-auto flex h-full w-full max-w-3xl items-center gap-2.5">
+    <div className="h-14 flex-none border-b border-neutral-200 dark:border-neutral-800">
+      {/* 경계선은 폭 전체를 긋되, 제목은 카드와 같은 열 안에 두어 왼쪽 끝이 맞는다. */}
+      <div className={`${READING_COLUMN} flex h-full items-center gap-2.5 px-3 lg:px-4`}>
         {title ? (
           <h1 className="truncate text-lg font-semibold text-neutral-900 lg:text-xl dark:text-neutral-100">
             {title}

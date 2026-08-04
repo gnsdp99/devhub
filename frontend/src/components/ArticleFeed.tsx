@@ -1,6 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { fetchArticles } from "../api/articles";
+import { READING_COLUMN } from "../lib/layout";
 import { ArticleCard } from "./ArticleCard";
 import {
   CardSkeletons,
@@ -64,8 +65,8 @@ export function ArticleFeed({ source, showSourceName }: Props) {
 
   return (
     // 스크롤은 폭 전체가 받고, 읽는 폭만 안쪽에서 묶는다. 사이드바를 접어도 한 줄 길이가 그대로다.
-    <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 lg:p-4">
-      <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col gap-2.5 lg:gap-3">
+    <div ref={scrollRef} className="flex-1 overflow-y-auto py-3 lg:py-4">
+      <div className={`${READING_COLUMN} flex min-h-full flex-col gap-2.5 px-3 lg:gap-3 lg:px-4`}>
         {status === "pending" && (offline ? <OfflineFeed /> : <CardSkeletons count={4} />)}
 
         {status !== "pending" && data === undefined && (
