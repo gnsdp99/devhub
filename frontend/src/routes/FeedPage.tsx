@@ -5,7 +5,8 @@ import { useAppLayout } from "./AppLayout";
 
 export function FeedPage() {
   const { sidebarOpen, toggleSidebar, theme, toggleTheme } = useAppLayout();
-  useDocumentTitle("전체 피드");
+  // 전체 피드는 사이트의 첫 화면이라 탭 제목에 덧붙일 대상이 없다.
+  useDocumentTitle();
 
   return (
     <>
