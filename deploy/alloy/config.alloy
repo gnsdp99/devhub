@@ -18,9 +18,24 @@ prometheus.exporter.unix "host" {
   set_collectors = ["cpu", "meminfo", "loadavg", "filesystem", "diskstats", "netdev"]
 }
 
+// exporter가 타깃에 자기 job-instance 라벨을 심어 scrape의 job_name을 덮어쓴다.
+discovery.relabel "host" {
+  targets = prometheus.exporter.unix.host.targets
+
+  rule {
+    target_label = "job"
+    replacement  = "devhub-host"
+  }
+
+  rule {
+    target_label = "instance"
+    replacement  = "devhub-ec2"
+  }
+}
+
 prometheus.scrape "host" {
   job_name        = "devhub-host"
-  targets         = prometheus.exporter.unix.host.targets
+  targets         = discovery.relabel.host.output
   scrape_interval = "60s"
   forward_to      = [prometheus.remote_write.grafana_cloud.receiver]
 }
@@ -32,9 +47,25 @@ prometheus.exporter.postgres "rds" {
   data_source_names = [sys.env("POSTGRES_EXPORTER_DSN")]
 }
 
+// instance를 명시하지 않으면 DSN 전체가 라벨이 된다. DSN이 파싱되지 않는
+// 형식이면 마스킹도 걸리지 않아 비밀번호가 그대로 메트릭에 실린다.
+discovery.relabel "rds" {
+  targets = prometheus.exporter.postgres.rds.targets
+
+  rule {
+    target_label = "job"
+    replacement  = "devhub-rds"
+  }
+
+  rule {
+    target_label = "instance"
+    replacement  = "devhub-db"
+  }
+}
+
 prometheus.scrape "rds" {
   job_name        = "devhub-rds"
-  targets         = prometheus.exporter.postgres.rds.targets
+  targets         = discovery.relabel.rds.output
   scrape_interval = "60s"
   forward_to      = [prometheus.remote_write.grafana_cloud.receiver]
 }
