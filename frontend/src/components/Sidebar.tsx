@@ -36,14 +36,14 @@ export function Sidebar({
   return (
     <aside
       className={[
-        "fixed inset-y-0 left-0 z-40 flex w-[270px] flex-col border-r border-neutral-200 bg-neutral-50 transition-transform duration-200 ease-out",
+        "absolute inset-y-0 left-0 z-40 flex w-[270px] flex-col border-r border-neutral-200 bg-neutral-50 transition-transform duration-200 ease-out",
         "dark:border-neutral-800 dark:bg-neutral-900",
         "lg:static lg:z-auto lg:w-[238px] lg:translate-x-0 lg:shadow-none lg:transition-none",
         drawerOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full",
         desktopOpen ? "lg:flex" : "lg:hidden",
       ].join(" ")}
     >
-      <div className="flex flex-none items-center gap-2 border-b border-neutral-200 p-3 dark:border-neutral-800">
+      <div className="flex h-14 flex-none items-center gap-2 border-b border-neutral-200 px-3 dark:border-neutral-800">
         <input
           type="search"
           value={query}

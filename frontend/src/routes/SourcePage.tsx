@@ -6,7 +6,7 @@ import { useAppLayout } from "./AppLayout";
 
 export function SourcePage() {
   const { slug = "" } = useParams();
-  const { sources, sidebarOpen, toggleSidebar, theme, toggleTheme } = useAppLayout();
+  const { sources } = useAppLayout();
 
   const source = sources?.find((candidate) => candidate.slug === slug);
   const isUnknown = sources !== undefined && source === undefined;
@@ -15,14 +15,7 @@ export function SourcePage() {
 
   return (
     <>
-      <FeedHeader
-        title={title}
-        siteUrl={source?.siteUrl}
-        sidebarOpen={sidebarOpen}
-        onMenuClick={toggleSidebar}
-        theme={theme}
-        onThemeToggle={toggleTheme}
-      />
+      <FeedHeader title={title} siteUrl={source?.siteUrl} />
       {isUnknown ? (
         <div className="flex flex-1 items-center justify-center px-6 text-center">
           <p className="text-sm text-neutral-500 dark:text-neutral-400">

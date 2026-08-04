@@ -1,21 +1,13 @@
 import { Link } from "react-router";
 import { FeedHeader } from "../components/FeedHeader";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
-import { useAppLayout } from "./AppLayout";
 
 export function NotFoundPage() {
-  const { sidebarOpen, toggleSidebar, theme, toggleTheme } = useAppLayout();
   useDocumentTitle("찾을 수 없는 페이지");
 
   return (
     <>
-      <FeedHeader
-        title="찾을 수 없는 페이지"
-        sidebarOpen={sidebarOpen}
-        onMenuClick={toggleSidebar}
-        theme={theme}
-        onThemeToggle={toggleTheme}
-      />
+      <FeedHeader title="찾을 수 없는 페이지" />
       <div className="flex flex-1 flex-col items-center justify-center gap-3.5 px-6 text-center">
         <p className="text-lg text-neutral-600 dark:text-neutral-300">주소를 찾을 수 없어요</p>
         <Link

@@ -1,49 +1,15 @@
-import { Link } from "react-router";
-import type { Theme } from "../lib/useTheme";
-import { ExternalLinkIcon, MenuIcon, MoonIcon, SunIcon } from "./icons";
+import { ExternalLinkIcon } from "./icons";
 
 type Props = {
   title: string;
   siteUrl?: string;
-  sidebarOpen: boolean;
-  onMenuClick: () => void;
-  theme: Theme;
-  onThemeToggle: () => void;
 };
 
-const ICON_BUTTON =
-  "flex size-8 flex-none items-center justify-center rounded-lg border border-neutral-300 text-neutral-700 transition-colors hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800";
-
-export function FeedHeader({
-  title,
-  siteUrl,
-  sidebarOpen,
-  onMenuClick,
-  theme,
-  onThemeToggle,
-}: Props) {
+/** 본문 칸에만 걸리는 제목 줄. 지금 보고 있는 피드가 무엇인지 알린다. */
+export function FeedHeader({ title, siteUrl }: Props) {
   return (
-    <header className="flex flex-none items-center gap-2.5 border-b border-neutral-200 bg-white px-3 py-2.5 lg:px-5 lg:py-3.5 dark:border-neutral-800 dark:bg-neutral-950">
-      <button
-        type="button"
-        onClick={onMenuClick}
-        aria-label={sidebarOpen ? "소스 목록 접기" : "소스 목록 펼치기"}
-        aria-expanded={sidebarOpen}
-        className={ICON_BUTTON}
-      >
-        <MenuIcon className="size-5" />
-      </button>
-
-      {/* 사이드바는 접히므로, 전체 피드로 돌아오는 길은 늘 보이는 헤더에 둔다. */}
-      <Link
-        to="/"
-        className="flex-none rounded text-lg font-bold tracking-tight text-neutral-900 transition-colors hover:text-neutral-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral-900 lg:text-xl dark:text-neutral-100 dark:hover:text-neutral-400 dark:focus-visible:outline-neutral-100"
-      >
-        DevHub
-      </Link>
-
-      <span aria-hidden="true" className="h-4 w-px flex-none bg-neutral-300 dark:bg-neutral-700" />
-
+    // h-14는 사이드바 검색줄과 같은 높이다. 두 칸의 경계선이 한 줄로 이어진다.
+    <div className="flex h-14 flex-none items-center gap-2.5 border-b border-neutral-200 px-3 lg:px-5 dark:border-neutral-800">
       {title ? (
         <h1 className="truncate text-lg font-semibold text-neutral-900 lg:text-xl dark:text-neutral-100">
           {title}
@@ -65,15 +31,6 @@ export function FeedHeader({
           <span className="hidden text-xs lg:inline">원본 사이트</span>
         </a>
       )}
-
-      <button
-        type="button"
-        onClick={onThemeToggle}
-        aria-label={theme === "dark" ? "밝은 화면으로 전환" : "어두운 화면으로 전환"}
-        className={`ml-auto ${ICON_BUTTON}`}
-      >
-        {theme === "dark" ? <SunIcon className="size-5" /> : <MoonIcon className="size-5" />}
-      </button>
-    </header>
+    </div>
   );
 }
