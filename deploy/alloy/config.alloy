@@ -1,0 +1,71 @@
+// Grafana Alloy 수집 설정. 비밀 값은 /etc/sysconfig/alloy 환경변수로 주입된다.
+// 컨테이너 로그의 읽기 오프셋은 Alloy가 --storage.path 아래 positions 파일로 자동 관리한다.
+
+// ── 메트릭: 애플리케이션 ──────────────────────────────────────────────
+
+prometheus.scrape "devhub_api" {
+  job_name        = "devhub-api"
+  targets         = [{"__address__" = "127.0.0.1:8080", "instance" = "devhub-api"}]
+  metrics_path    = "/actuator/prometheus"
+  scrape_interval = "60s"
+  forward_to      = [prometheus.remote_write.grafana_cloud.receiver]
+}
+
+// ── 메트릭: 호스트 ────────────────────────────────────────────────────
+// 기본 collector 전체는 1,000개 넘는 시계열을 만들므로 필요한 것만 켠다.
+
+prometheus.exporter.unix "host" {
+  set_collectors = ["cpu", "meminfo", "loadavg", "filesystem", "diskstats", "netdev"]
+}
+
+prometheus.scrape "host" {
+  job_name        = "devhub-host"
+  targets         = prometheus.exporter.unix.host.targets
+  scrape_interval = "60s"
+  forward_to      = [prometheus.remote_write.grafana_cloud.receiver]
+}
+
+prometheus.remote_write "grafana_cloud" {
+  endpoint {
+    url = sys.env("GRAFANA_CLOUD_PROMETHEUS_URL")
+
+    basic_auth {
+      username = sys.env("GRAFANA_CLOUD_PROMETHEUS_USERNAME")
+      password = sys.env("GRAFANA_CLOUD_API_TOKEN")
+    }
+  }
+}
+
+// ── 로그: 컨테이너 ────────────────────────────────────────────────────
+
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+discovery.relabel "containers" {
+  targets = discovery.docker.containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+}
+
+loki.source.docker "containers" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.containers.output
+  labels     = {"job" = "docker"}
+  forward_to = [loki.write.grafana_cloud.receiver]
+}
+
+loki.write "grafana_cloud" {
+  endpoint {
+    url = sys.env("GRAFANA_CLOUD_LOKI_URL")
+
+    basic_auth {
+      username = sys.env("GRAFANA_CLOUD_LOKI_USERNAME")
+      password = sys.env("GRAFANA_CLOUD_API_TOKEN")
+    }
+  }
+}
