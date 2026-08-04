@@ -9,6 +9,7 @@ import com.devhub.collect.domain.FeedParseException;
 import com.devhub.collect.domain.FetchResult;
 import com.devhub.collect.domain.ParsedArticle;
 import com.devhub.collect.app.port.out.FeedCollectionExecutor;
+import com.devhub.collect.app.port.out.FeedCollectionReporter;
 import com.devhub.collect.app.port.out.FeedFetcher;
 import com.devhub.collect.app.port.out.FeedParser;
 import com.devhub.collect.app.port.out.FeedRepository;
@@ -30,25 +31,33 @@ public class FeedCollector {
     private final FeedFetcher fetcher;
     private final FeedParser parser;
     private final FeedCollectionExecutor executor;
+    private final FeedCollectionReporter reporter;
     private final Clock clock;
 
     public void collect() {
-        List<Feed> feeds = feedRepository.findCollectible();
-        log.info("피드 {}개를 수집합니다.", feeds.size());
-        executor.runAll(feeds, this::collectOne);
+        try (var _ = reporter.started()) {
+            List<Feed> feeds = feedRepository.findCollectible();
+            log.info("피드 {}개를 수집합니다.", feeds.size());
+            executor.runAll(feeds, this::collectOne);
+        }
     }
 
     private void collectOne(Feed feed) {
         try {
             FetchResult result = fetcher.fetch(feed.feedUrl(), feed.etag(), feed.lastModified());
             switch (result) {
-                case FetchResult.NotModified _ -> feedRepository.markUnchanged(feed.id());
+                case FetchResult.NotModified _ -> {
+                    feedRepository.markUnchanged(feed.id());
+                    reporter.unchanged(feed.slug());
+                }
                 case FetchResult.Fetched fetched -> store(feed, fetched);
             }
         } catch (FeedFetchException | FeedParseException e) {
             feedRepository.markFailed(feed.id());
+            reporter.failed(feed.slug());
             log.warn("피드 수집에 실패했습니다. slug={}", feed.slug(), e);
         } catch (RuntimeException e) {
+            reporter.errored(feed.slug());
             log.error("피드를 저장하지 못했습니다. slug={}", feed.slug(), e);
         }
     }
@@ -57,6 +66,7 @@ public class FeedCollector {
         List<NewArticle> articles = toNewArticles(feed, parser.parse(fetched.body()));
         int stored = articleWriter.write(articles);
         feedRepository.markCollected(feed.id(), fetched.etag(), fetched.lastModified());
+        reporter.collected(feed.slug(), stored);
         log.info("피드를 수집했습니다. slug={}, 신규={}건", feed.slug(), stored);
     }
 
