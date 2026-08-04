@@ -1,7 +1,9 @@
 package com.devhub.collect.app;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
@@ -17,6 +19,7 @@ import com.devhub.collect.domain.FeedParseException;
 import com.devhub.collect.domain.FetchResult;
 import com.devhub.collect.domain.ParsedArticle;
 import com.devhub.collect.app.port.out.FeedCollectionExecutor;
+import com.devhub.collect.app.port.out.FeedCollectionReporter;
 import com.devhub.collect.app.port.out.FeedFetcher;
 import com.devhub.collect.app.port.out.FeedParser;
 import com.devhub.collect.app.port.out.FeedRepository;
@@ -25,6 +28,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -55,16 +59,24 @@ class FeedCollectorUnitTest {
     @Mock
     private FeedParser parser;
 
+    @Mock
+    private FeedCollectionReporter reporter;
+
+    private final AtomicBoolean timingFinished = new AtomicBoolean();
+
     private FeedCollector collector;
 
     @BeforeEach
     void setUp() {
+        timingFinished.set(false);
+        given(reporter.started()).willReturn(() -> timingFinished.set(true));
         collector = new FeedCollector(
                 feedRepository,
                 articleWriter,
                 fetcher,
                 parser,
                 SEQUENTIAL,
+                reporter,
                 Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
@@ -163,6 +175,56 @@ class FeedCollectorUnitTest {
         collector.collect();
 
         assertThat(storedUrls()).containsExactly("https://example.com/a");
+    }
+
+    @Test
+    @DisplayName("피드마다 수집 결과를 보고한다")
+    void reportsEachFeedOutcome() {
+        Feed fresh = feed(1, "fresh");
+        Feed notModified = feed(2, "not-modified");
+        Feed broken = feed(3, "broken");
+        givenCollectible(fresh, notModified, broken);
+        givenFetched(fresh);
+        given(fetcher.fetch(notModified.feedUrl(), null, null))
+                .willReturn(new FetchResult.NotModified());
+        given(fetcher.fetch(broken.feedUrl(), null, null))
+                .willThrow(new FeedFetchException("피드 응답이 500입니다."));
+        givenParsed(article("https://example.com/a", NOW));
+        given(articleWriter.write(anyList())).willReturn(1);
+
+        collector.collect();
+
+        then(reporter).should().collected("fresh", 1);
+        then(reporter).should().unchanged("not-modified");
+        then(reporter).should().failed("broken");
+    }
+
+    @Test
+    @DisplayName("DB 저장에 실패하면 오류로 보고한다")
+    void reportsAnErrorWhenStoringFails() {
+        Feed feed = feed(1, "first");
+        givenCollectible(feed);
+        givenFetched(feed);
+        givenParsed(article("https://example.com/a", NOW));
+        given(articleWriter.write(anyList()))
+                .willThrow(new DataAccessResourceFailureException("연결이 끊겼습니다."));
+
+        collector.collect();
+
+        then(reporter).should().errored("first");
+        then(reporter).should(never()).collected(any(), anyInt());
+    }
+
+    @Test
+    @DisplayName("수집 도중 예외가 나도 소요 시간 측정을 끝낸다")
+    void finishesTimingEvenWhenCollectingFails() {
+        given(feedRepository.findCollectible())
+                .willThrow(new DataAccessResourceFailureException("연결이 끊겼습니다."));
+
+        assertThatThrownBy(() -> collector.collect())
+                .isInstanceOf(DataAccessResourceFailureException.class);
+
+        assertThat(timingFinished).isTrue();
     }
 
     private void givenCollectible(Feed... feeds) {

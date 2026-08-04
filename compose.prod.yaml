@@ -3,6 +3,8 @@ services:
     image: ${DEVHUB_IMAGE:?Image reference is required}
     restart: unless-stopped
     env_file: .env
+    environment:
+      LOGGING_STRUCTURED_FORMAT_CONSOLE: ecs
     stop_grace_period: 20s
     deploy:
       resources:
@@ -11,8 +13,7 @@ services:
     ports:
       - "127.0.0.1:8080:8080"
     logging:
-      driver: awslogs
+      driver: json-file
       options:
-        awslogs-region: ${AWS_REGION:-ap-northeast-2}
-        awslogs-group: /devhub/api
-        awslogs-create-group: "true"
+        max-size: 10m
+        max-file: "3"
