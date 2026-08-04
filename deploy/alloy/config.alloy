@@ -25,6 +25,20 @@ prometheus.scrape "host" {
   forward_to      = [prometheus.remote_write.grafana_cloud.receiver]
 }
 
+// ── 메트릭: RDS ───────────────────────────────────────────────────────
+// pg_monitor 롤만 가진 전용 유저로 접속한다. DSN은 SSM에서 온다.
+
+prometheus.exporter.postgres "rds" {
+  data_source_names = [sys.env("POSTGRES_EXPORTER_DSN")]
+}
+
+prometheus.scrape "rds" {
+  job_name        = "devhub-rds"
+  targets         = prometheus.exporter.postgres.rds.targets
+  scrape_interval = "60s"
+  forward_to      = [prometheus.remote_write.grafana_cloud.receiver]
+}
+
 prometheus.remote_write "grafana_cloud" {
   endpoint {
     url = sys.env("GRAFANA_CLOUD_PROMETHEUS_URL")
