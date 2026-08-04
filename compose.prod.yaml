@@ -3,6 +3,8 @@ services:
     image: ${DEVHUB_IMAGE:?Image reference is required}
     restart: unless-stopped
     env_file: .env
+    environment:
+      LOGGING_STRUCTURED_FORMAT_CONSOLE: ecs
     stop_grace_period: 20s
     deploy:
       resources:

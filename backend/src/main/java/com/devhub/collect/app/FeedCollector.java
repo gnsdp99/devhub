@@ -37,7 +37,10 @@ public class FeedCollector {
     public void collect() {
         try (var _ = reporter.started()) {
             List<Feed> feeds = feedRepository.findCollectible();
-            log.info("피드 {}개를 수집합니다.", feeds.size());
+            log.atInfo()
+                    .setMessage("피드를 수집합니다.")
+                    .addKeyValue("feeds", feeds.size())
+                    .log();
             executor.runAll(feeds, this::collectOne);
         }
     }
@@ -55,10 +58,18 @@ public class FeedCollector {
         } catch (FeedFetchException | FeedParseException e) {
             feedRepository.markFailed(feed.id());
             reporter.failed(feed.slug());
-            log.warn("피드 수집에 실패했습니다. slug={}", feed.slug(), e);
+            log.atWarn()
+                    .setMessage("피드 수집에 실패했습니다.")
+                    .addKeyValue("feed", feed.slug())
+                    .setCause(e)
+                    .log();
         } catch (RuntimeException e) {
             reporter.errored(feed.slug());
-            log.error("피드를 저장하지 못했습니다. slug={}", feed.slug(), e);
+            log.atError()
+                    .setMessage("피드를 저장하지 못했습니다.")
+                    .addKeyValue("feed", feed.slug())
+                    .setCause(e)
+                    .log();
         }
     }
 
@@ -67,7 +78,11 @@ public class FeedCollector {
         int stored = articleWriter.write(articles);
         feedRepository.markCollected(feed.id(), fetched.etag(), fetched.lastModified());
         reporter.collected(feed.slug(), stored);
-        log.info("피드를 수집했습니다. slug={}, 신규={}건", feed.slug(), stored);
+        log.atInfo()
+                .setMessage("피드를 수집했습니다.")
+                .addKeyValue("feed", feed.slug())
+                .addKeyValue("stored", stored)
+                .log();
     }
 
     private List<NewArticle> toNewArticles(Feed feed, List<ParsedArticle> parsed) {
@@ -87,7 +102,12 @@ public class FeedCollector {
                         article.author(),
                         article.publishedAt()));
             } catch (IllegalArgumentException e) {
-                log.warn("URL을 해시할 수 없어 건너뜁니다. slug={}, url={}", feed.slug(), article.url(), e);
+                log.atWarn()
+                        .setMessage("URL을 해시할 수 없어 건너뜁니다.")
+                        .addKeyValue("feed", feed.slug())
+                        .addKeyValue("url", article.url())
+                        .setCause(e)
+                        .log();
             }
         }
         return articles;
