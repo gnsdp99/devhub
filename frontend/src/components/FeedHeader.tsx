@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import type { Theme } from "../lib/useTheme";
 import { ExternalLinkIcon, MenuIcon, MoonIcon, SunIcon } from "./icons";
 
@@ -32,6 +33,16 @@ export function FeedHeader({
       >
         <MenuIcon className="size-5" />
       </button>
+
+      {/* 사이드바는 접히므로, 전체 피드로 돌아오는 길은 늘 보이는 헤더에 둔다. */}
+      <Link
+        to="/"
+        className="flex-none rounded text-lg font-bold tracking-tight text-neutral-900 transition-colors hover:text-neutral-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral-900 lg:text-xl dark:text-neutral-100 dark:hover:text-neutral-400 dark:focus-visible:outline-neutral-100"
+      >
+        DevHub
+      </Link>
+
+      <span aria-hidden="true" className="h-4 w-px flex-none bg-neutral-300 dark:bg-neutral-700" />
 
       {title ? (
         <h1 className="truncate text-lg font-semibold text-neutral-900 lg:text-xl dark:text-neutral-100">

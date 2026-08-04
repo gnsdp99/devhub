@@ -14,13 +14,6 @@ type Props = {
   onSelect: () => void;
 };
 
-type Entry = {
-  key: string;
-  name: string;
-  to: string;
-  end: boolean;
-};
-
 const SKELETON_KEYS = ["a", "b", "c", "d", "e", "f"];
 
 export function Sidebar({
@@ -34,19 +27,10 @@ export function Sidebar({
   onClose,
   onSelect,
 }: Props) {
-  const entries: Entry[] = [
-    { key: "__all__", name: "전체", to: "/", end: true },
-    ...(sources ?? []).map((source) => ({
-      key: source.slug,
-      name: source.name,
-      to: `/sources/${source.slug}`,
-      end: false,
-    })),
-  ];
-
   const keyword = query.trim().toLowerCase();
+  const entries = sources ?? [];
   const visible = keyword
-    ? entries.filter((entry) => entry.name.toLowerCase().includes(keyword))
+    ? entries.filter((source) => source.name.toLowerCase().includes(keyword))
     : entries;
 
   return (
@@ -98,11 +82,10 @@ export function Sidebar({
           </p>
         )}
 
-        {visible.map((entry) => (
+        {visible.map((source) => (
           <NavLink
-            key={entry.key}
-            to={entry.to}
-            end={entry.end}
+            key={source.slug}
+            to={`/sources/${source.slug}`}
             onClick={onSelect}
             className={({ isActive }) =>
               [
@@ -113,7 +96,7 @@ export function Sidebar({
               ].join(" ")
             }
           >
-            {entry.name}
+            {source.name}
           </NavLink>
         ))}
       </nav>
