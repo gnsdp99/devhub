@@ -54,30 +54,20 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-ec2
     env:
       IMAGE: ${{ needs.build.outputs.image }}
       INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
       SHA: ${{ github.event.workflow_run.head_sha }}
     steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
       - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      - run: |
-          command_id=$(aws ssm send-command \
-            --instance-ids "$INSTANCE_ID" \
-            --document-name AWS-RunShellScript \
-            --comment "deploy ${SHA::7}" \
-            --parameters commands="/opt/devhub/deploy.sh $IMAGE" \
-            --query Command.CommandId --output text)
-
-          set +e
-          aws ssm wait command-executed --command-id "$command_id" --instance-id "$INSTANCE_ID"
-          status=$?
-          set -e
-
-          aws ssm get-command-invocation \
-            --command-id "$command_id" --instance-id "$INSTANCE_ID" \
-            --query '[StandardOutputContent, StandardErrorContent]' --output text
-          exit $status
+      - run: deploy/scripts/ssm-deploy.sh "$IMAGE"
