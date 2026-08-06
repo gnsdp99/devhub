@@ -3,8 +3,8 @@ import { apiGet } from "./client";
 export type Source = {
   slug: string;
   name: string;
-  category: string;
   siteUrl: string;
+  logoUrl: string | null;
 };
 
 export function fetchSources(): Promise<Source[]> {
