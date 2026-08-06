@@ -74,7 +74,7 @@ public class FeedCollector {
     }
 
     private void store(Feed feed, FetchResult.Fetched fetched) {
-        List<NewArticle> articles = toNewArticles(feed, parser.parse(fetched.body()));
+        List<NewArticle> articles = toNewArticles(feed, parser.parse(fetched.body(), feed.feedUrl()));
         int stored = articleWriter.write(articles);
         feedRepository.markCollected(feed.id(), fetched.etag(), fetched.lastModified());
         reporter.collected(feed.slug(), stored);

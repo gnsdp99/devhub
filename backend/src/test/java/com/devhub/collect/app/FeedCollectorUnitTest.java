@@ -3,6 +3,7 @@ package com.devhub.collect.app;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -123,7 +124,7 @@ class FeedCollectorUnitTest {
         Feed feed = feed(1, "first");
         givenCollectible(feed);
         givenFetched(feed);
-        given(parser.parse(BODY)).willThrow(new FeedParseException("깨진 XML입니다.", null));
+        given(parser.parse(eq(BODY), any())).willThrow(new FeedParseException("깨진 XML입니다.", null));
 
         collector.collect();
 
@@ -239,7 +240,7 @@ class FeedCollectorUnitTest {
     }
 
     private void givenParsed(ParsedArticle... articles) {
-        given(parser.parse(BODY)).willReturn(List.of(articles));
+        given(parser.parse(eq(BODY), any())).willReturn(List.of(articles));
     }
 
     private List<String> storedUrls() {
