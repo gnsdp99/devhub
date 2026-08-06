@@ -33,7 +33,7 @@ class SourceApiIntegrationTest extends AbstractApiIntegrationTest {
     }
 
     @Test
-    @DisplayName("소스마다 slug, 이름, 카테고리, 사이트 주소를 담아 돌려준다")
+    @DisplayName("소스마다 slug, 이름, 사이트 주소를 담아 돌려준다")
     void returnsTheFieldsOfEachSource() {
         assertThat(mvc.get().uri("/api/sources"))
                 .hasStatusOk()
@@ -41,9 +41,6 @@ class SourceApiIntegrationTest extends AbstractApiIntegrationTest {
                 .hasPathSatisfying(
                         "$[?(@.slug == 'hackernews')].name",
                         it -> assertThat(it).asArray().containsExactly("Hacker News"))
-                .hasPathSatisfying(
-                        "$[?(@.slug == 'hackernews')].category",
-                        it -> assertThat(it).asArray().containsExactly("NEWS"))
                 .hasPathSatisfying(
                         "$[?(@.slug == 'hackernews')].siteUrl",
                         it -> assertThat(it).asArray().containsExactly("https://news.ycombinator.com"));

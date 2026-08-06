@@ -41,7 +41,7 @@ class SourceRepositoryIntegrationTest extends AbstractIntegrationTest {
         }
 
         @Test
-        @DisplayName("slug, 이름, 카테고리, 사이트 주소를 채운다")
+        @DisplayName("slug, 이름, 사이트 주소, 로고 주소를 채운다")
         void fillsEveryFieldOfASource() {
             List<Source> sources = repository.findEnabled();
 
@@ -49,7 +49,7 @@ class SourceRepositoryIntegrationTest extends AbstractIntegrationTest {
                     .filteredOn(source -> source.slug().equals("hackernews"))
                     .singleElement()
                     .isEqualTo(new Source(
-                            "hackernews", "Hacker News", "NEWS", "https://news.ycombinator.com"));
+                            "hackernews", "Hacker News", "https://news.ycombinator.com", null));
         }
     }
 
