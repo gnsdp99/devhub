@@ -33,8 +33,8 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
         @DisplayName("기사를 저장하고 저장한 건수를 돌려준다")
         void insertsArticlesAndReturnsTheStoredCount() {
             int stored = repository.insertNew(List.of(
-                    articleOf(feedId("hackernews"), URL),
-                    articleOf(feedId("hackernews"), "https://example.com/other")));
+                    articleOf(feedId("cloudflare"), URL),
+                    articleOf(feedId("cloudflare"), "https://example.com/other")));
 
             assertThat(stored).isEqualTo(2);
             assertThat(countArticles()).isEqualTo(2);
@@ -44,7 +44,7 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
         @DisplayName("guid, summary, author가 없어도 저장한다")
         void insertsArticlesWithoutOptionalFields() {
             NewArticle article =
-                    new NewArticle(feedId("hackernews"), null, URL, "제목", null, null, PUBLISHED_AT);
+                    new NewArticle(feedId("cloudflare"), null, URL, "제목", null, null, PUBLISHED_AT);
 
             assertThat(repository.insertNew(List.of(article))).isEqualTo(1);
         }
@@ -63,7 +63,7 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
         @Test
         @DisplayName("같은 기사를 다시 저장해도 건수가 늘지 않는다")
         void storesTheSameArticleOnlyOnce() {
-            long feedId = feedId("hackernews");
+            long feedId = feedId("cloudflare");
             repository.insertNew(List.of(articleOf(feedId, URL)));
 
             int stored = repository.insertNew(List.of(articleOf(feedId, URL)));
@@ -75,7 +75,7 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
         @Test
         @DisplayName("한 번의 호출 안에 같은 URL이 두 번 있어도 한 건만 저장한다")
         void storesOnlyOneRowForDuplicatesInsideOneCall() {
-            long feedId = feedId("hackernews");
+            long feedId = feedId("cloudflare");
 
             int stored = repository.insertNew(
                     List.of(articleOf(feedId, URL), articleOf(feedId, URL)));
@@ -87,7 +87,7 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
         @Test
         @DisplayName("tracking parameter만 다른 URL은 같은 기사로 본다")
         void treatsUrlsDifferingOnlyByTrackingParameterAsOneArticle() {
-            long feedId = feedId("hackernews");
+            long feedId = feedId("cloudflare");
             repository.insertNew(List.of(articleOf(feedId, URL)));
 
             int stored = repository.insertNew(
@@ -99,13 +99,13 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
         @Test
         @DisplayName("같은 글이 다른 소스에서도 오면 기사는 하나만 저장하고 두 소스 모두에서 볼 수 있다")
         void storesOneArticleAndShowsItUnderBothSources() {
-            repository.insertNew(List.of(articleOf(feedId("hackernews"), URL)));
+            repository.insertNew(List.of(articleOf(feedId("cloudflare"), URL)));
 
-            repository.insertNew(List.of(articleOf(feedId("geeknews"), URL)));
+            repository.insertNew(List.of(articleOf(feedId("huggingface"), URL)));
 
             assertThat(countArticles()).isEqualTo(1);
-            assertThat(repository.findPage(null, sourceId("hackernews"), 10)).hasSize(1);
-            assertThat(repository.findPage(null, sourceId("geeknews"), 10)).hasSize(1);
+            assertThat(repository.findPage(null, sourceId("cloudflare"), 10)).hasSize(1);
+            assertThat(repository.findPage(null, sourceId("huggingface"), 10)).hasSize(1);
         }
 
         @Test
@@ -141,7 +141,7 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
         void truncatesPublishedAtToMilliseconds() {
             Instant withMicros = Instant.parse("2026-07-20T12:00:00.123456Z");
             repository.insertNew(List.of(new NewArticle(
-                    feedId("hackernews"), null, URL, "제목", null, null, withMicros)));
+                    feedId("cloudflare"), null, URL, "제목", null, null, withMicros)));
 
             Instant stored = jdbcClient.sql("select published_at from article")
                     .query(Instant.class)
@@ -158,7 +158,7 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
         @Test
         @DisplayName("최근에 발행된 기사부터 돌려준다")
         void returnsTheMostRecentlyPublishedArticlesFirst() {
-            long feedId = feedId("hackernews");
+            long feedId = feedId("cloudflare");
             repository.insertNew(List.of(
                     articleOf(feedId, "https://example.com/old", PUBLISHED_AT.minusSeconds(60)),
                     articleOf(feedId, "https://example.com/new", PUBLISHED_AT)));
@@ -172,7 +172,7 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
         @Test
         @DisplayName("발행 시각이 같으면 나중에 저장한 기사부터 돌려준다")
         void breaksTiesOnPublishedAtByIdDescending() {
-            long feedId = feedId("hackernews");
+            long feedId = feedId("cloudflare");
             repository.insertNew(List.of(
                     articleOf(feedId, "https://example.com/first", PUBLISHED_AT),
                     articleOf(feedId, "https://example.com/second", PUBLISHED_AT)));
@@ -186,7 +186,7 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
         @Test
         @DisplayName("limit보다 많이 돌려주지 않는다")
         void returnsAtMostTheGivenLimit() {
-            long feedId = feedId("hackernews");
+            long feedId = feedId("cloudflare");
             repository.insertNew(List.of(
                     articleOf(feedId, "https://example.com/1", PUBLISHED_AT),
                     articleOf(feedId, "https://example.com/2", PUBLISHED_AT.minusSeconds(1)),
@@ -198,7 +198,7 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
         @Test
         @DisplayName("커서보다 오래된 기사만 돌려준다")
         void returnsOnlyArticlesOlderThanTheCursor() {
-            long feedId = feedId("hackernews");
+            long feedId = feedId("cloudflare");
             repository.insertNew(List.of(
                     articleOf(feedId, "https://example.com/1", PUBLISHED_AT),
                     articleOf(feedId, "https://example.com/2", PUBLISHED_AT.minusSeconds(1)),
@@ -214,7 +214,7 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
         @Test
         @DisplayName("발행 시각이 같은 기사도 커서로 건너뛰거나 겹치지 않는다")
         void pagesThroughArticlesThatSharePublishedAt() {
-            long feedId = feedId("hackernews");
+            long feedId = feedId("cloudflare");
             repository.insertNew(List.of(
                     articleOf(feedId, "https://example.com/1", PUBLISHED_AT),
                     articleOf(feedId, "https://example.com/2", PUBLISHED_AT),
@@ -235,7 +235,7 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
         @DisplayName("소스를 지정하면 그 소스의 기사만 돌려준다")
         void returnsOnlyArticlesOfTheGivenSource() {
             repository.insertNew(List.of(
-                    articleOf(feedId("hackernews"), "https://example.com/hn", PUBLISHED_AT),
+                    articleOf(feedId("cloudflare"), "https://example.com/hn", PUBLISHED_AT),
                     articleOf(
                             feedId("google-deepmind"),
                             "https://example.com/google",
@@ -253,7 +253,7 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
             repository.insertNew(List.of(
                     articleOf(deepmind, "https://example.com/google-new", PUBLISHED_AT),
                     articleOf(deepmind, "https://example.com/google-old", PUBLISHED_AT.minusSeconds(60)),
-                    articleOf(feedId("hackernews"), "https://example.com/hn", PUBLISHED_AT.minusSeconds(30))));
+                    articleOf(feedId("cloudflare"), "https://example.com/hn", PUBLISHED_AT.minusSeconds(30))));
             Article newest = repository.findPage(null, sourceId("google"), 1).getFirst();
 
             List<Article> page = repository.findPage(ArticleCursor.of(newest), sourceId("google"), 10);
@@ -275,14 +275,14 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
         @Test
         @DisplayName("여러 소스에 실린 기사는 소스를 이름순으로 모두 채운다")
         void listsEverySourceThatCarriedTheArticleOrderedByName() {
-            repository.insertNew(List.of(articleOf(feedId("hackernews"), URL)));
-            repository.insertNew(List.of(articleOf(feedId("geeknews"), URL)));
+            repository.insertNew(List.of(articleOf(feedId("cloudflare"), URL)));
+            repository.insertNew(List.of(articleOf(feedId("huggingface"), URL)));
 
             Article article = repository.findPage(null, null, 10).getFirst();
 
             assertThat(article.sources())
                     .extracting(ArticleSource::sourceName)
-                    .containsExactly("GeekNews", "Hacker News");
+                    .containsExactly("Cloudflare", "Hugging Face");
         }
     }
 

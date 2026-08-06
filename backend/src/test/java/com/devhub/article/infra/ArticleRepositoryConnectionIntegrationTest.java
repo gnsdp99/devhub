@@ -30,7 +30,7 @@ class ArticleRepositoryConnectionIntegrationTest extends AbstractIntegrationTest
     @DisplayName("기사 목록을 조회한 뒤 커넥션을 반납한다")
     void returnsConnectionsAfterFindingPages() {
         repository.insertNew(List.of(new NewArticle(
-                feedId("hackernews"),
+                feedId("cloudflare"),
                 "guid",
                 "https://example.com/article",
                 "제목",

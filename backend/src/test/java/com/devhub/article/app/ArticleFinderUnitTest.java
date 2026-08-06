@@ -33,7 +33,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ArticleFinderUnitTest {
 
     private static final Instant PUBLISHED_AT = Instant.parse("2026-07-20T12:00:00Z");
-    private static final String SOURCE = "hackernews";
+    private static final String SOURCE = "cloudflare";
     private static final String SOURCE_NAME = "Hacker News";
 
     @Mock

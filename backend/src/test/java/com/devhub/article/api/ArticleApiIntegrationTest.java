@@ -105,9 +105,9 @@ class ArticleApiIntegrationTest extends AbstractApiIntegrationTest {
     @DisplayName("소스를 지정하면 그 소스의 기사만 돌려준다")
     void returnsOnlyArticlesOfTheGivenSource() {
         givenArticle(NEW_URL, PUBLISHED_AT);
-        givenArticle("hackernews", OLD_URL, PUBLISHED_AT.minusSeconds(60));
+        givenArticle("cloudflare", OLD_URL, PUBLISHED_AT.minusSeconds(60));
 
-        assertThat(mvc.get().uri("/api/articles").param("source", "hackernews"))
+        assertThat(mvc.get().uri("/api/articles").param("source", "cloudflare"))
                 .hasStatusOk()
                 .bodyJson()
                 .extractingPath("$.items[*].url")
