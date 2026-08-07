@@ -2,6 +2,8 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { fetchArticles } from "../api/articles";
 import { READING_COLUMN } from "../lib/layout";
+import { withMinDuration } from "../lib/minDuration";
+import { useAppLayout } from "../routes/AppLayout";
 import { ArticleCard } from "./ArticleCard";
 import {
   CardSkeletons,
@@ -18,9 +20,14 @@ type Props = {
   showSourceName: boolean;
 };
 
+/** 스켈레톤이 깜빡임으로 끝나지 않고 로딩으로 읽히는 최소 시간. */
+const SKELETON_MIN_MS = 450;
+
 export function ArticleFeed({ source, showSourceName }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  // 글 응답에는 로고가 없다. 사이드바가 이미 받아 둔 소스 목록에서 slug로 찾는다.
+  const { sources } = useAppLayout();
 
   const {
     data,
@@ -33,7 +40,8 @@ export function ArticleFeed({ source, showSourceName }: Props) {
     refetch,
   } = useInfiniteQuery({
     queryKey: ["articles", source ?? null],
-    queryFn: ({ pageParam }) => fetchArticles({ cursor: pageParam, source }),
+    queryFn: ({ pageParam }) =>
+      withMinDuration(fetchArticles({ cursor: pageParam, source }), SKELETON_MIN_MS),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
   });
@@ -62,6 +70,7 @@ export function ArticleFeed({ source, showSourceName }: Props) {
   }, [observing, fetchNextPage]);
 
   const articles = data?.pages.flatMap((page) => page.items) ?? [];
+  const logoOf = new Map((sources ?? []).map((entry) => [entry.slug, entry.logoUrl]));
 
   return (
     // 스크롤은 폭 전체가 받고, 읽는 폭만 안쪽에서 묶는다. 사이드바를 접어도 한 줄 길이가 그대로다.
@@ -77,7 +86,12 @@ export function ArticleFeed({ source, showSourceName }: Props) {
         {data !== undefined && articles.length === 0 && <EmptyFeed scoped={source !== undefined} />}
 
         {articles.map((article) => (
-          <ArticleCard key={article.id} article={article} showSourceName={showSourceName} />
+          <ArticleCard
+            key={article.id}
+            article={article}
+            showSourceName={showSourceName}
+            logoUrl={logoOf.get(article.sources[0]?.source)}
+          />
         ))}
 
         {isFetchingNextPage && <CardSkeletons count={2} />}

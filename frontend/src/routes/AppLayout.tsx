@@ -64,7 +64,7 @@ export function AppLayout() {
   return (
     <div
       style={{ "--sidebar-w": sidebarWidth } as CSSProperties}
-      className="flex h-dvh flex-col overflow-hidden bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100"
+      className="flex h-dvh flex-col overflow-hidden bg-canvas text-ink"
     >
       <TopBar
         sidebarOpen={isDesktop ? desktopOpen : drawerOpen}
@@ -80,7 +80,7 @@ export function AppLayout() {
             type="button"
             onClick={() => setDrawerOpen(false)}
             aria-label="사이드바 닫기"
-            className="absolute inset-0 z-30 cursor-default bg-neutral-900/50 lg:hidden"
+            className="absolute inset-0 z-30 cursor-default bg-scrim lg:hidden"
           />
         )}
 

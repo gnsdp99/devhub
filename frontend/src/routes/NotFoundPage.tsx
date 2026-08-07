@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { FeedHeader } from "../components/FeedHeader";
+import { OUTLINE_BUTTON } from "../lib/styles";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 
 export function NotFoundPage() {
@@ -9,11 +10,8 @@ export function NotFoundPage() {
     <>
       <FeedHeader title="찾을 수 없는 페이지" />
       <div className="flex flex-1 flex-col items-center justify-center gap-3.5 px-6 text-center">
-        <p className="text-lg text-neutral-600 dark:text-neutral-300">주소를 찾을 수 없어요</p>
-        <Link
-          to="/"
-          className="rounded-full border border-neutral-900 px-4 py-1.5 text-sm text-neutral-900 transition-colors hover:bg-neutral-900 hover:text-white dark:border-neutral-100 dark:text-neutral-100 dark:hover:bg-neutral-100 dark:hover:text-neutral-900"
-        >
+        <p className="text-heading text-ink-muted">주소를 찾을 수 없어요</p>
+        <Link to="/" className={OUTLINE_BUTTON}>
           전체 피드로 가기
         </Link>
       </div>

@@ -15,10 +15,10 @@ export function SourcePage() {
 
   return (
     <>
-      <FeedHeader title={title} siteUrl={source?.siteUrl} />
+      <FeedHeader title={title} siteUrl={source?.siteUrl} logoUrl={source?.logoUrl} />
       {isUnknown ? (
         <div className="flex flex-1 items-center justify-center px-6 text-center">
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+          <p className="text-body text-ink-muted">
             "{slug}" 소스를 찾을 수 없어요. 왼쪽 목록에서 다시 골라 주세요.
           </p>
         </div>
