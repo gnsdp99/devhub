@@ -2,6 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { fetchArticles } from "../api/articles";
 import { READING_COLUMN } from "../lib/layout";
+import { withMinDuration } from "../lib/minDuration";
 import { ArticleCard } from "./ArticleCard";
 import {
   CardSkeletons,
@@ -18,6 +19,9 @@ type Props = {
   showSourceName: boolean;
 };
 
+/** 스켈레톤이 깜빡임으로 끝나지 않고 로딩으로 읽히는 최소 시간. */
+const SKELETON_MIN_MS = 450;
+
 export function ArticleFeed({ source, showSourceName }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -33,7 +37,8 @@ export function ArticleFeed({ source, showSourceName }: Props) {
     refetch,
   } = useInfiniteQuery({
     queryKey: ["articles", source ?? null],
-    queryFn: ({ pageParam }) => fetchArticles({ cursor: pageParam, source }),
+    queryFn: ({ pageParam }) =>
+      withMinDuration(fetchArticles({ cursor: pageParam, source }), SKELETON_MIN_MS),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
   });
