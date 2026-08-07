@@ -5,7 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.devhub.support.AbstractApiIntegrationTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.transaction.annotation.Transactional;
 
+@Transactional
 class SourceApiIntegrationTest extends AbstractApiIntegrationTest {
 
     @Test
@@ -16,36 +18,38 @@ class SourceApiIntegrationTest extends AbstractApiIntegrationTest {
                 .bodyJson()
                 .extractingPath("$[*].name")
                 .asArray()
-                .startsWith("AWS", "ByteByteGo", "Cloudflare")
-                .endsWith("요즘IT");
+                .startsWith(".NET", "AWS", "Agoda")
+                .endsWith("한글과컴퓨터");
     }
 
     @Test
     @DisplayName("비활성 소스는 돌려주지 않는다")
     void leavesOutDisabledSources() {
+        update("update source set enabled = false where slug = 'redis'");
+
         assertThat(mvc.get().uri("/api/sources"))
                 .hasStatusOk()
                 .bodyJson()
                 .extractingPath("$[*].slug")
                 .asArray()
-                .contains("hackernews")
-                .doesNotContain("anthropic");
+                .contains("cloudflare")
+                .doesNotContain("redis");
     }
 
     @Test
-    @DisplayName("소스마다 slug, 이름, 카테고리, 사이트 주소를 담아 돌려준다")
+    @DisplayName("소스마다 slug, 이름, 사이트 주소, 로고 주소를 담아 돌려준다")
     void returnsTheFieldsOfEachSource() {
         assertThat(mvc.get().uri("/api/sources"))
                 .hasStatusOk()
                 .bodyJson()
                 .hasPathSatisfying(
-                        "$[?(@.slug == 'hackernews')].name",
-                        it -> assertThat(it).asArray().containsExactly("Hacker News"))
+                        "$[?(@.slug == 'cloudflare')].name",
+                        it -> assertThat(it).asArray().containsExactly("Cloudflare"))
                 .hasPathSatisfying(
-                        "$[?(@.slug == 'hackernews')].category",
-                        it -> assertThat(it).asArray().containsExactly("NEWS"))
+                        "$[?(@.slug == 'cloudflare')].siteUrl",
+                        it -> assertThat(it).asArray().containsExactly("https://blog.cloudflare.com"))
                 .hasPathSatisfying(
-                        "$[?(@.slug == 'hackernews')].siteUrl",
-                        it -> assertThat(it).asArray().containsExactly("https://news.ycombinator.com"));
+                        "$[?(@.slug == 'cloudflare')].logoUrl",
+                        it -> assertThat(it).asArray().containsExactly("/logos/cloudflare.svg"));
     }
 }

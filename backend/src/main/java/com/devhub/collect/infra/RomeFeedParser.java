@@ -11,6 +11,7 @@ import com.rometools.rome.io.SyndFeedInput;
 import com.rometools.rome.io.XmlReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -29,7 +30,7 @@ public class RomeFeedParser implements FeedParser {
     private final Clock clock;
 
     @Override
-    public List<ParsedArticle> parse(byte[] body) {
+    public List<ParsedArticle> parse(byte[] body, String feedUrl) {
         SyndFeed feed = read(body);
         Instant now = clock.instant();
 
@@ -43,7 +44,7 @@ public class RomeFeedParser implements FeedParser {
             }
             articles.add(new ParsedArticle(
                     trimToNull(entry.getUri()),
-                    url,
+                    absolute(url, feedUrl),
                     title,
                     summaryOf(entry),
                     trimToNull(entry.getAuthor()),
@@ -58,6 +59,18 @@ public class RomeFeedParser implements FeedParser {
             return input.build(reader);
         } catch (IOException | FeedException | IllegalArgumentException e) {
             throw new FeedParseException("피드를 파싱할 수 없습니다.", e);
+        }
+    }
+
+    private String absolute(String url, String feedUrl) {
+        if (feedUrl == null) {
+            return url;
+        }
+        try {
+            URI resolved = URI.create(feedUrl).resolve(url);
+            return resolved.isAbsolute() ? resolved.toString() : url;
+        } catch (IllegalArgumentException e) {
+            return url;
         }
     }
 

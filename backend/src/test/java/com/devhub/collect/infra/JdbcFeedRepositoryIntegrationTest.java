@@ -27,9 +27,9 @@ class FeedRepositoryIntegrationTest extends AbstractIntegrationTest {
         @Test
         @DisplayName("피드가 비활성이면 제외된다")
         void skipsDisabledFeeds() {
-            update("update feed set enabled = false where slug = 'hackernews'");
+            update("update feed set enabled = false where slug = 'cloudflare'");
 
-            assertThat(slugsOf(repository.findCollectible())).doesNotContain("hackernews");
+            assertThat(slugsOf(repository.findCollectible())).doesNotContain("cloudflare");
         }
 
         @Test
@@ -38,18 +38,18 @@ class FeedRepositoryIntegrationTest extends AbstractIntegrationTest {
             update("update source set enabled = false where slug = 'google'");
 
             assertThat(slugsOf(repository.findCollectible()))
-                    .doesNotContain("google-keyword", "google-deepmind")
-                    .contains("hackernews");
+                    .doesNotContain("google-cloud", "google-deepmind")
+                    .contains("cloudflare");
         }
 
         @Test
         @DisplayName("조건부 요청에 실어 보낼 etag와 last_modified를 함께 읽는다")
         void readsStoredConditionalRequestHeaders() {
-            repository.markCollected(feedId("hackernews"), "\"v1\"", LAST_MODIFIED);
+            repository.markCollected(feedId("cloudflare"), "\"v1\"", LAST_MODIFIED);
 
-            Feed feed = feedOf("hackernews");
+            Feed feed = feedOf("cloudflare");
 
-            assertThat(feed.feedUrl()).isEqualTo("https://hnrss.org/frontpage");
+            assertThat(feed.feedUrl()).isEqualTo("https://blog.cloudflare.com/rss/");
             assertThat(feed.etag()).isEqualTo("\"v1\"");
             assertThat(feed.lastModified()).isEqualTo(LAST_MODIFIED);
         }
@@ -62,42 +62,42 @@ class FeedRepositoryIntegrationTest extends AbstractIntegrationTest {
         @Test
         @DisplayName("수집에 성공하면 조건부 요청 헤더와 성공 시각을 남긴다")
         void markCollectedStoresHeadersAndSuccessTime() {
-            long feedId = feedId("hackernews");
+            long feedId = feedId("cloudflare");
 
             repository.markCollected(feedId, "\"v1\"", LAST_MODIFIED);
 
-            assertThat(feedOf("hackernews").etag()).isEqualTo("\"v1\"");
+            assertThat(feedOf("cloudflare").etag()).isEqualTo("\"v1\"");
             assertThat(instantOf(feedId, "last_success_at")).isNotNull();
         }
 
         @Test
         @DisplayName("응답에 헤더가 없으면 저장해 둔 값을 지운다")
         void markCollectedClearsHeadersTheResponseOmitted() {
-            long feedId = feedId("hackernews");
+            long feedId = feedId("cloudflare");
             repository.markCollected(feedId, "\"v1\"", LAST_MODIFIED);
 
             repository.markCollected(feedId, null, null);
 
-            assertThat(feedOf("hackernews").etag()).isNull();
-            assertThat(feedOf("hackernews").lastModified()).isNull();
+            assertThat(feedOf("cloudflare").etag()).isNull();
+            assertThat(feedOf("cloudflare").lastModified()).isNull();
         }
 
         @Test
         @DisplayName("304면 조건부 요청 헤더를 그대로 두고 성공 시각만 갱신한다")
         void markUnchangedKeepsHeaders() {
-            long feedId = feedId("hackernews");
+            long feedId = feedId("cloudflare");
             repository.markCollected(feedId, "\"v1\"", LAST_MODIFIED);
 
             repository.markUnchanged(feedId);
 
-            assertThat(feedOf("hackernews").etag()).isEqualTo("\"v1\"");
+            assertThat(feedOf("cloudflare").etag()).isEqualTo("\"v1\"");
             assertThat(instantOf(feedId, "last_success_at")).isNotNull();
         }
 
         @Test
         @DisplayName("실패하면 연속 실패 횟수만 올리고 성공 시각은 두지 않는다")
         void markFailedIncrementsTheFailureCount() {
-            long feedId = feedId("hackernews");
+            long feedId = feedId("cloudflare");
 
             repository.markFailed(feedId);
             repository.markFailed(feedId);
@@ -110,7 +110,7 @@ class FeedRepositoryIntegrationTest extends AbstractIntegrationTest {
         @Test
         @DisplayName("다시 성공하면 연속 실패 횟수가 0으로 돌아간다")
         void successResetsTheFailureCount() {
-            long feedId = feedId("hackernews");
+            long feedId = feedId("cloudflare");
             repository.markFailed(feedId);
 
             repository.markCollected(feedId, null, null);
@@ -121,7 +121,7 @@ class FeedRepositoryIntegrationTest extends AbstractIntegrationTest {
         @Test
         @DisplayName("피드를 갱신하면 updated_at이 따라 갱신된다")
         void updatingAFeedMovesUpdatedAt() {
-            long feedId = feedId("hackernews");
+            long feedId = feedId("cloudflare");
             Instant before = instantOf(feedId, "updated_at");
 
             repository.markFailed(feedId);

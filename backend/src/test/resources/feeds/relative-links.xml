@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+    <channel>
+        <title>카카오뱅크 기술블로그</title>
+        <link>https://tech.kakaobank.com/</link>
+        <description>link를 사이트 기준 상대 경로로 싣는 피드</description>
+        <item>
+            <title>금융사를 위한 AWS GameDay 2026</title>
+            <link>/posts/2607-aws-gameday-2026-winners/</link>
+            <pubDate>Mon, 27 Jul 2026 17:02:47 +0900</pubDate>
+        </item>
+        <item>
+            <title>AI, 고객 행동의 순서를 읽다</title>
+            <link>posts/2606-sequence-based-fds-model/</link>
+            <pubDate>Tue, 09 Jun 2026 09:42:16 +0900</pubDate>
+        </item>
+        <item>
+            <title>이미 절대 주소인 항목</title>
+            <link>https://tech.kakaobank.com/posts/2605-no-wait-collateral-review-system-design/</link>
+            <pubDate>Wed, 06 May 2026 11:28:33 +0900</pubDate>
+        </item>
+    </channel>
+</rss>

@@ -10,7 +10,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
+@Transactional
 class SourceRepositoryIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
@@ -23,11 +25,13 @@ class SourceRepositoryIntegrationTest extends AbstractIntegrationTest {
         @Test
         @DisplayName("비활성 소스는 빼고 돌려준다")
         void leavesOutDisabledSources() {
+            update("update source set enabled = false where slug = 'redis'");
+
             List<Source> sources = repository.findEnabled();
 
             assertThat(sources).extracting(Source::slug)
-                    .contains("hackernews")
-                    .doesNotContain("anthropic");
+                    .contains("cloudflare")
+                    .doesNotContain("redis");
         }
 
         @Test
@@ -37,19 +41,20 @@ class SourceRepositoryIntegrationTest extends AbstractIntegrationTest {
 
             assertThat(sources).extracting(Source::name)
                     .isSortedAccordingTo(Comparator.naturalOrder())
-                    .endsWith("요즘IT");
+                    .endsWith("한글과컴퓨터");
         }
 
         @Test
-        @DisplayName("slug, 이름, 카테고리, 사이트 주소를 채운다")
+        @DisplayName("slug, 이름, 사이트 주소, 로고 주소를 채운다")
         void fillsEveryFieldOfASource() {
             List<Source> sources = repository.findEnabled();
 
             assertThat(sources)
-                    .filteredOn(source -> source.slug().equals("hackernews"))
+                    .filteredOn(source -> source.slug().equals("cloudflare"))
                     .singleElement()
                     .isEqualTo(new Source(
-                            "hackernews", "Hacker News", "NEWS", "https://news.ycombinator.com"));
+                            "cloudflare", "Cloudflare", "https://blog.cloudflare.com",
+                            "/logos/cloudflare.svg"));
         }
     }
 
@@ -60,13 +65,15 @@ class SourceRepositoryIntegrationTest extends AbstractIntegrationTest {
         @Test
         @DisplayName("활성 소스면 id를 돌려준다")
         void findsTheIdOfAnEnabledSource() {
-            assertThat(repository.findEnabledIdBySlug("hackernews")).isPresent();
+            assertThat(repository.findEnabledIdBySlug("cloudflare")).isPresent();
         }
 
         @Test
         @DisplayName("비활성 소스면 빈 값을 돌려준다")
         void findsNothingForADisabledSource() {
-            assertThat(repository.findEnabledIdBySlug("anthropic")).isEmpty();
+            update("update source set enabled = false where slug = 'redis'");
+
+            assertThat(repository.findEnabledIdBySlug("redis")).isEmpty();
         }
 
         @Test

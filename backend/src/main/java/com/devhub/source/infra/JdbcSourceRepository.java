@@ -17,7 +17,7 @@ public class JdbcSourceRepository implements SourceRepository {
     @Override
     public List<Source> findEnabled() {
         return jdbcClient.sql("""
-                        select slug, name, category, site_url
+                        select slug, name, site_url, logo_url
                           from source
                          where enabled
                          order by name collate "C"

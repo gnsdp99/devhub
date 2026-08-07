@@ -20,12 +20,13 @@ import org.springframework.core.io.ClassPathResource;
 class FeedParserUnitTest {
 
     private static final Instant NOW = Instant.parse("2026-07-30T00:00:00Z");
+    private static final String FEED_URL = "https://tech.kakaobank.com/index.xml";
 
     private final RomeFeedParser parser = new RomeFeedParser(Clock.fixed(NOW, ZoneOffset.UTC));
 
     private List<ParsedArticle> parseFixture(String name) {
         try {
-            return parser.parse(new ClassPathResource("feeds/" + name).getContentAsByteArray());
+            return parser.parse(new ClassPathResource("feeds/" + name).getContentAsByteArray(), FEED_URL);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -138,7 +139,7 @@ class FeedParserUnitTest {
     class Broken {
 
         private List<ParsedArticle> parse(String xml) {
-            return parser.parse(xml.getBytes(StandardCharsets.UTF_8));
+            return parser.parse(xml.getBytes(StandardCharsets.UTF_8), FEED_URL);
         }
 
         @Test
@@ -193,6 +194,23 @@ class FeedParserUnitTest {
                     <?xml version="1.0" encoding="UTF-8"?>
                     <rss version="2.0"><channel><title>t</title><link>https://example.com</link>
                     <description>d</description>%s</channel></rss>""".formatted(items);
+        }
+    }
+
+    @Nested
+    @DisplayName("상대 경로 link")
+    class RelativeLink {
+
+        private final List<ParsedArticle> articles = parseFixture("relative-links.xml");
+
+        @Test
+        @DisplayName("피드 주소를 기준으로 절대 주소로 바꾼다")
+        void resolvesAgainstTheFeedUrl() {
+            assertThat(articles).extracting(ParsedArticle::url)
+                    .containsExactly(
+                            "https://tech.kakaobank.com/posts/2607-aws-gameday-2026-winners/",
+                            "https://tech.kakaobank.com/posts/2606-sequence-based-fds-model/",
+                            "https://tech.kakaobank.com/posts/2605-no-wait-collateral-review-system-design/");
         }
     }
 }

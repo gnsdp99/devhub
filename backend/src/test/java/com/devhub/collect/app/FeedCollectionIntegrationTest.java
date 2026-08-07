@@ -40,8 +40,8 @@ class FeedCollectionIntegrationTest extends IntegrationTestSupport {
 
         update("update feed set enabled = false");
         updateTestSource("""
-                insert into source (slug, name, category, enabled)
-                values (:slug, '테스트 소스', 'NEWS', true)
+                insert into source (slug, name, enabled)
+                values (:slug, '테스트 소스', true)
                 """);
         addFeed("test-ok", server.serve("/ok", exchange -> {
             exchange.getResponseHeaders().set("ETag", "\"v1\"");

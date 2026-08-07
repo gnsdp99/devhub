@@ -9,5 +9,5 @@ public interface FeedParser {
     /**
      * @throws FeedParseException 피드를 파싱할 수 없으면
      */
-    List<ParsedArticle> parse(byte[] body);
+    List<ParsedArticle> parse(byte[] body, String feedUrl);
 }
