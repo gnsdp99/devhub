@@ -89,14 +89,25 @@ export function Sidebar({
             onClick={onSelect}
             className={({ isActive }) =>
               [
-                "block truncate rounded-r border-l-[3px] px-2.5 py-1.5 text-sm transition-colors",
+                "flex items-center gap-2 rounded-r border-l-[3px] px-2.5 py-1.5 text-sm transition-colors",
                 isActive
                   ? "border-neutral-900 bg-neutral-200 font-semibold text-neutral-900 dark:border-neutral-100 dark:bg-neutral-800 dark:text-neutral-100"
                   : "border-transparent text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800",
               ].join(" ")
             }
           >
-            {source.name}
+            {source.logoUrl && (
+              <img
+                src={source.logoUrl}
+                alt=""
+                loading="lazy"
+                onError={(event) => {
+                  event.currentTarget.style.visibility = "hidden";
+                }}
+                className="size-4 flex-none rounded-sm object-contain"
+              />
+            )}
+            <span className="truncate">{source.name}</span>
           </NavLink>
         ))}
       </nav>
