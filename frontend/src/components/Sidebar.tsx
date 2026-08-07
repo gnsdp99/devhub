@@ -62,22 +62,20 @@ export function Sidebar({
         </button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto p-2">
+      <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-2">
         {isPending &&
           SKELETON_KEYS.map((key) => (
-            <div key={key} className="px-2.5 py-2">
+            <div key={key} className="flex-none px-3 py-2.5">
               <div className="h-4 animate-pulse rounded bg-neutral-200 dark:bg-neutral-800" />
             </div>
           ))}
 
         {errorMessage && (
-          <p className="px-2.5 py-2 text-sm text-neutral-500 dark:text-neutral-400">
-            {errorMessage}
-          </p>
+          <p className="px-3 py-2 text-sm text-neutral-500 dark:text-neutral-400">{errorMessage}</p>
         )}
 
         {!isPending && !errorMessage && visible.length === 0 && (
-          <p className="px-2.5 py-2 text-sm text-neutral-400 dark:text-neutral-500">
+          <p className="px-3 py-2 text-sm text-neutral-400 dark:text-neutral-500">
             일치하는 소스가 없어요
           </p>
         )}
@@ -89,7 +87,7 @@ export function Sidebar({
             onClick={onSelect}
             className={({ isActive }) =>
               [
-                "flex items-center gap-2 rounded-r border-l-[3px] px-2.5 py-1.5 text-sm transition-colors",
+                "flex flex-none items-center gap-2 rounded-r border-l-[3px] px-3 py-2 text-sm transition-colors",
                 isActive
                   ? "border-neutral-900 bg-neutral-200 font-semibold text-neutral-900 dark:border-neutral-100 dark:bg-neutral-800 dark:text-neutral-100"
                   : "border-transparent text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800",
