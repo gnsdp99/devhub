@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { FOCUS_RING, ICON_BUTTON } from "../lib/styles";
 import type { Theme } from "../lib/useTheme";
 import { MenuIcon, MoonIcon, SunIcon } from "./icons";
 
@@ -9,14 +10,10 @@ type Props = {
   onThemeToggle: () => void;
 };
 
-// 테두리 없이 호버 배경만으로 누를 수 있음을 알린다.
-const ICON_BUTTON =
-  "flex size-8 flex-none items-center justify-center rounded-lg text-neutral-700 transition-colors hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800";
-
 /** 사이드바와 본문 위를 가로지르는 전역 바. 어느 화면에서나 같은 자리에 남는다. */
 export function TopBar({ sidebarOpen, onMenuClick, theme, onThemeToggle }: Props) {
   return (
-    <header className="flex h-14 flex-none items-center gap-2.5 border-b border-neutral-200 bg-white px-3 lg:px-5 dark:border-neutral-800 dark:bg-neutral-950">
+    <header className="flex h-14 flex-none items-center gap-2.5 border-b border-line bg-canvas px-3 lg:px-5">
       <button
         type="button"
         onClick={onMenuClick}
@@ -29,7 +26,7 @@ export function TopBar({ sidebarOpen, onMenuClick, theme, onThemeToggle }: Props
 
       <Link
         to="/"
-        className="flex-none rounded text-lg font-bold tracking-tight text-neutral-900 transition-colors hover:text-neutral-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral-900 lg:text-xl dark:text-neutral-100 dark:hover:text-neutral-400 dark:focus-visible:outline-neutral-100"
+        className={`flex-none rounded-sm text-wordmark font-bold text-ink transition-colors hover:text-ink-muted ${FOCUS_RING}`}
       >
         DevHub
       </Link>
