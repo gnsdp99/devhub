@@ -8,6 +8,7 @@ import com.devhub.collect.domain.FeedFetchException;
 import com.devhub.collect.domain.FeedParseException;
 import com.devhub.collect.domain.FetchResult;
 import com.devhub.collect.domain.ParsedArticle;
+import com.devhub.collect.app.port.out.CollectionPolicy;
 import com.devhub.collect.app.port.out.FeedCollectionExecutor;
 import com.devhub.collect.app.port.out.FeedCollectionReporter;
 import com.devhub.collect.app.port.out.FeedFetcher;
@@ -32,6 +33,7 @@ public class FeedCollector {
     private final FeedParser parser;
     private final FeedCollectionExecutor executor;
     private final FeedCollectionReporter reporter;
+    private final CollectionPolicy policy;
     private final Clock clock;
 
     public void collect() {
@@ -87,9 +89,10 @@ public class FeedCollector {
 
     private List<NewArticle> toNewArticles(Feed feed, List<ParsedArticle> parsed) {
         Instant now = clock.instant();
+        CollectionWindow window = policy.window();
         List<NewArticle> articles = new ArrayList<>();
         for (ParsedArticle article : parsed) {
-            if (!CollectionWindow.includes(article.publishedAt(), now)) {
+            if (!window.includes(article.publishedAt(), now)) {
                 continue;
             }
             try {
