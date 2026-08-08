@@ -6,6 +6,7 @@ import com.devhub.article.domain.Article;
 import com.devhub.source.app.SourceFinder;
 import com.devhub.source.domain.UnknownSourceException;
 import com.devhub.support.domain.InvalidCursorException;
+import com.devhub.support.domain.Page;
 import com.devhub.support.domain.TimeCursor;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -26,21 +27,17 @@ public class ArticleFinder {
      * @throws InvalidCursorException 커서를 해석할 수 없으면
      * @throws UnknownSourceException 그 slug를 쓰는 활성 소스가 없으면
      */
-    public ArticlePage findPage(String cursor, String source, Integer limit) {
+    public Page<Article> findPage(String cursor, String source, Integer limit) {
         int pageSize = pageSizeOf(limit);
         List<Article> found = repository.findPage(
                 cursor == null ? null : TimeCursor.decode(cursor),
                 sourceIdOf(source),
                 pageSize + 1);
 
-        if (found.size() <= pageSize) {
-            return new ArticlePage(List.copyOf(found), null);
-        }
-        List<Article> items = List.copyOf(found.subList(0, pageSize));
-        return new ArticlePage(items, cursorOf(items.getLast()));
+        return Page.of(found, pageSize, ArticleFinder::cursorOf);
     }
 
-    private String cursorOf(Article article) {
+    private static String cursorOf(Article article) {
         return new TimeCursor(article.publishedAt(), article.id()).encode();
     }
 

@@ -11,6 +11,7 @@ import com.devhub.article.domain.Article;
 import com.devhub.support.domain.TimeCursor;
 import com.devhub.article.domain.ArticleSource;
 import com.devhub.support.domain.InvalidCursorException;
+import com.devhub.support.domain.Page;
 import com.devhub.article.app.port.out.ArticlePagePolicy;
 import com.devhub.article.app.port.out.ArticleRepository;
 import com.devhub.source.app.SourceFinder;
@@ -84,30 +85,18 @@ class ArticleFinderUnitTest {
     }
 
     @Nested
-    @DisplayName("다음 페이지")
-    class NextPage {
+    @DisplayName("다음 커서")
+    class NextCursor {
 
         @Test
-        @DisplayName("한 페이지를 채우고도 남으면 마지막으로 돌려준 기사를 가리키는 커서를 준다")
-        void pointsTheCursorAtTheLastReturnedArticle() {
+        @DisplayName("마지막으로 돌려준 기사의 발행 시각과 id로 만든다")
+        void isEncodedFromThePublishedAtAndIdOfTheLastArticle() {
             Article last = givenFound(DEFAULT_LIMIT + 1).get(DEFAULT_LIMIT - 1);
 
-            ArticlePage page = finder.findPage(null, null, null);
+            Page<Article> page = finder.findPage(null, null, null);
 
-            assertThat(page.items()).hasSize(DEFAULT_LIMIT);
             assertThat(page.nextCursor())
                     .isEqualTo(new TimeCursor(last.publishedAt(), last.id()).encode());
-        }
-
-        @Test
-        @DisplayName("남는 기사가 없으면 커서를 주지 않는다")
-        void givesNoCursorOnTheLastPage() {
-            givenFound(DEFAULT_LIMIT);
-
-            ArticlePage page = finder.findPage(null, null, null);
-
-            assertThat(page.items()).hasSize(DEFAULT_LIMIT);
-            assertThat(page.nextCursor()).isNull();
         }
     }
 
