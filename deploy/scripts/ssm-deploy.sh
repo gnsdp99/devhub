@@ -5,8 +5,8 @@ set -euo pipefail
 # 명령에 실어 보낸다. 이미지를 넘기지 않으면 인스턴스에 배포돼 있는 것을 재사용한다.
 
 IMAGE="${1:-}"
-INSTANCE_ID="${INSTANCE_ID:?instance id is required}"
 SHA="${SHA:?commit sha is required}"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 payload=$(tar -cz compose.prod.yaml deploy | base64 -w0)
 
@@ -28,22 +28,4 @@ $resolve
 rm -rf /tmp/devhub-sync
 SCRIPT
 
-params="$(mktemp)"
-jq -Rn --rawfile s "$remote" '{commands: ($s | rtrimstr("\n") | split("\n"))}' >"$params"
-
-command_id=$(aws ssm send-command \
-    --instance-ids "$INSTANCE_ID" \
-    --document-name AWS-RunShellScript \
-    --comment "deploy ${SHA:0:7}" \
-    --parameters "file://$params" \
-    --query Command.CommandId --output text)
-
-set +e
-aws ssm wait command-executed --command-id "$command_id" --instance-id "$INSTANCE_ID"
-status=$?
-set -e
-
-aws ssm get-command-invocation \
-    --command-id "$command_id" --instance-id "$INSTANCE_ID" \
-    --query '[StandardOutputContent, StandardErrorContent]' --output text
-exit $status
+exec "$DIR/ssm-run.sh" "$remote" "deploy ${SHA:0:7}"
