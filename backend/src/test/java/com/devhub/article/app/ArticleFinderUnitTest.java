@@ -8,9 +8,9 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 import com.devhub.article.domain.Article;
-import com.devhub.article.domain.ArticleCursor;
+import com.devhub.support.domain.TimeCursor;
 import com.devhub.article.domain.ArticleSource;
-import com.devhub.article.domain.InvalidCursorException;
+import com.devhub.support.domain.InvalidCursorException;
 import com.devhub.article.app.port.out.ArticlePagePolicy;
 import com.devhub.article.app.port.out.ArticleRepository;
 import com.devhub.source.app.SourceFinder;
@@ -96,7 +96,7 @@ class ArticleFinderUnitTest {
 
             assertThat(page.items()).hasSize(DEFAULT_LIMIT);
             assertThat(page.nextCursor())
-                    .isEqualTo(new ArticleCursor(last.publishedAt(), last.id()).encode());
+                    .isEqualTo(new TimeCursor(last.publishedAt(), last.id()).encode());
         }
 
         @Test
@@ -118,7 +118,7 @@ class ArticleFinderUnitTest {
         @Test
         @DisplayName("해석해서 저장소에 넘긴다")
         void isDecodedBeforeReachingTheRepository() {
-            ArticleCursor cursor = new ArticleCursor(PUBLISHED_AT, 7);
+            TimeCursor cursor = new TimeCursor(PUBLISHED_AT, 7);
 
             finder.findPage(cursor.encode(), null, null);
 

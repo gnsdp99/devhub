@@ -1,12 +1,12 @@
 package com.devhub.article.app;
 
-import com.devhub.article.domain.Article;
-import com.devhub.article.domain.ArticleCursor;
-import com.devhub.article.domain.InvalidCursorException;
-import com.devhub.article.app.port.out.ArticleRepository;
-import com.devhub.source.app.SourceFinder;
 import com.devhub.article.app.port.out.ArticlePagePolicy;
+import com.devhub.article.app.port.out.ArticleRepository;
+import com.devhub.article.domain.Article;
+import com.devhub.source.app.SourceFinder;
 import com.devhub.source.domain.UnknownSourceException;
+import com.devhub.support.domain.InvalidCursorException;
+import com.devhub.support.domain.TimeCursor;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -29,7 +29,7 @@ public class ArticleFinder {
     public ArticlePage findPage(String cursor, String source, Integer limit) {
         int pageSize = pageSizeOf(limit);
         List<Article> found = repository.findPage(
-                cursor == null ? null : ArticleCursor.decode(cursor),
+                cursor == null ? null : TimeCursor.decode(cursor),
                 sourceIdOf(source),
                 pageSize + 1);
 
@@ -37,7 +37,11 @@ public class ArticleFinder {
             return new ArticlePage(List.copyOf(found), null);
         }
         List<Article> items = List.copyOf(found.subList(0, pageSize));
-        return new ArticlePage(items, ArticleCursor.of(items.getLast()).encode());
+        return new ArticlePage(items, cursorOf(items.getLast()));
+    }
+
+    private String cursorOf(Article article) {
+        return new TimeCursor(article.publishedAt(), article.id()).encode();
     }
 
     private int pageSizeOf(Integer limit) {

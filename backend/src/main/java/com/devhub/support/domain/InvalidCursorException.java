@@ -1,6 +1,4 @@
-package com.devhub.article.domain;
-
-import com.devhub.support.domain.InvalidInputException;
+package com.devhub.support.domain;
 
 public class InvalidCursorException extends InvalidInputException {
 

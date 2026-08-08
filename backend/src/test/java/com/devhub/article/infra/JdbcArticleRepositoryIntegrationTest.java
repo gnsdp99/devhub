@@ -3,7 +3,7 @@ package com.devhub.article.infra;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.devhub.article.domain.Article;
-import com.devhub.article.domain.ArticleCursor;
+import com.devhub.support.domain.TimeCursor;
 import com.devhub.article.domain.ArticleSource;
 import com.devhub.article.domain.NewArticle;
 import com.devhub.support.AbstractIntegrationTest;
@@ -205,7 +205,7 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
                     articleOf(feedId, "https://example.com/3", PUBLISHED_AT.minusSeconds(2))));
             Article first = repository.findPage(null, null, 1).getFirst();
 
-            List<Article> page = repository.findPage(ArticleCursor.of(first), null, 10);
+            List<Article> page = repository.findPage(cursorOf(first), null, 10);
 
             assertThat(page).extracting(Article::url)
                     .containsExactly("https://example.com/2", "https://example.com/3");
@@ -221,7 +221,7 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
                     articleOf(feedId, "https://example.com/3", PUBLISHED_AT)));
             List<Article> first = repository.findPage(null, null, 2);
 
-            List<Article> second = repository.findPage(ArticleCursor.of(first.getLast()), null, 2);
+            List<Article> second = repository.findPage(cursorOf(first.getLast()), null, 2);
 
             assertThat(Stream.concat(first.stream(), second.stream()))
                     .extracting(Article::url)
@@ -256,7 +256,7 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
                     articleOf(feedId("cloudflare"), "https://example.com/hn", PUBLISHED_AT.minusSeconds(30))));
             Article newest = repository.findPage(null, sourceId("google"), 1).getFirst();
 
-            List<Article> page = repository.findPage(ArticleCursor.of(newest), sourceId("google"), 10);
+            List<Article> page = repository.findPage(cursorOf(newest), sourceId("google"), 10);
 
             assertThat(page).extracting(Article::url).containsExactly("https://example.com/google-old");
         }
@@ -306,6 +306,11 @@ class ArticleRepositoryIntegrationTest extends AbstractIntegrationTest {
                 .param("id", feedId)
                 .query(Long.class)
                 .single();
+    }
+
+
+    private static TimeCursor cursorOf(Article article) {
+        return new TimeCursor(article.publishedAt(), article.id());
     }
 
 }
