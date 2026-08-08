@@ -6,6 +6,7 @@ import org.springframework.util.unit.DataSize;
 
 @ConfigurationProperties(prefix = "devhub.collect.http")
 public record FeedHttpProperties(
+        String userAgent,
         Duration connectTimeout,
         Duration readTimeout,
         DataSize maxBodySize,

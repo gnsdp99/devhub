@@ -11,7 +11,7 @@ spring:
       enabled: true
   threads:
     virtual:
-      enabled: true
+      enabled: false
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
@@ -22,12 +22,19 @@ spring:
     enabled: true
 
 devhub:
+  article:
+    page:
+      default-size: ${DEVHUB_ARTICLE_PAGE_DEFAULT_SIZE:20}
+      min-size: ${DEVHUB_ARTICLE_PAGE_MIN_SIZE:1}
+      max-size: ${DEVHUB_ARTICLE_PAGE_MAX_SIZE:50}
   collect:
     enabled: ${DEVHUB_COLLECT_ENABLED:false}
-    interval: ${DEVHUB_COLLECT_INTERVAL:PT30M}
+    interval: ${DEVHUB_COLLECT_INTERVAL:PT6H}
+    window: ${DEVHUB_COLLECT_WINDOW:P30D}
     execution:
       concurrency: ${DEVHUB_COLLECT_EXECUTION_CONCURRENCY:8}
     http:
+      user-agent: "${DEVHUB_COLLECT_HTTP_USER_AGENT:devhub-feed-collector/1.0 (+https://github.com/gnsdp99/devhub)}"
       connect-timeout: ${DEVHUB_COLLECT_HTTP_CONNECT_TIMEOUT:5s}
       read-timeout: ${DEVHUB_COLLECT_HTTP_READ_TIMEOUT:10s}
       max-body-size: ${DEVHUB_COLLECT_HTTP_MAX_BODY_SIZE:20MB}

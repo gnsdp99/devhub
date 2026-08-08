@@ -14,11 +14,13 @@ import static org.mockito.Mockito.times;
 
 import com.devhub.article.domain.NewArticle;
 import com.devhub.article.app.ArticleWriter;
+import com.devhub.collect.domain.CollectionWindow;
 import com.devhub.collect.domain.Feed;
 import com.devhub.collect.domain.FeedFetchException;
 import com.devhub.collect.domain.FeedParseException;
 import com.devhub.collect.domain.FetchResult;
 import com.devhub.collect.domain.ParsedArticle;
+import com.devhub.collect.app.port.out.CollectionPolicy;
 import com.devhub.collect.app.port.out.FeedCollectionExecutor;
 import com.devhub.collect.app.port.out.FeedCollectionReporter;
 import com.devhub.collect.app.port.out.FeedFetcher;
@@ -47,6 +49,8 @@ class FeedCollectorUnitTest {
     private static final byte[] BODY = "<rss/>".getBytes();
 
     private static final FeedCollectionExecutor SEQUENTIAL = List::forEach;
+
+    private static final CollectionPolicy POLICY = () -> new CollectionWindow(WINDOW);
 
     @Mock
     private FeedRepository feedRepository;
@@ -78,6 +82,7 @@ class FeedCollectorUnitTest {
                 parser,
                 SEQUENTIAL,
                 reporter,
+                POLICY,
                 Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
