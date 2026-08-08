@@ -2,7 +2,8 @@ package com.devhub.article.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.devhub.article.domain.ArticleCursor;
+import com.devhub.article.domain.Article;
+import com.devhub.support.domain.TimeCursor;
 import com.devhub.article.domain.NewArticle;
 import com.devhub.article.app.port.out.ArticleRepository;
 import com.devhub.support.AbstractApiIntegrationTest;
@@ -139,6 +140,11 @@ class ArticleApiIntegrationTest extends AbstractApiIntegrationTest {
     }
 
     private String cursorOfNewest() {
-        return ArticleCursor.of(repository.findPage(null, null, 1).getFirst()).encode();
+        return cursorOf(repository.findPage(null, null, 1).getFirst()).encode();
     }
+
+    private static TimeCursor cursorOf(Article article) {
+        return new TimeCursor(article.publishedAt(), article.id());
+    }
+
 }

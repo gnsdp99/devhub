@@ -2,7 +2,7 @@ package com.devhub.article.infra;
 
 import com.devhub.article.app.port.out.ArticleRepository;
 import com.devhub.article.domain.Article;
-import com.devhub.article.domain.ArticleCursor;
+import com.devhub.support.domain.TimeCursor;
 import com.devhub.article.domain.ArticleSource;
 import com.devhub.article.domain.NewArticle;
 import java.time.Instant;
@@ -91,7 +91,7 @@ public class JdbcArticleRepository implements ArticleRepository {
      * @param sourceId 이 소스의 기사만 가져온다. 소스를 가리지 않으면 null
      */
     @Override
-    public List<Article> findPage(ArticleCursor cursor, Long sourceId, int limit) {
+    public List<Article> findPage(TimeCursor cursor, Long sourceId, int limit) {
         List<ArticleRow> rows = sourceId == null
                 ? findGlobalRows(cursor, limit)
                 : findRowsBySource(cursor, sourceId, limit);
@@ -112,7 +112,7 @@ public class JdbcArticleRepository implements ArticleRepository {
         return Arrays.stream(jdbcTemplate.batchUpdate(INSERT_SQL, params)).sum();
     }
 
-    private List<ArticleRow> findGlobalRows(ArticleCursor cursor, int limit) {
+    private List<ArticleRow> findGlobalRows(TimeCursor cursor, int limit) {
         List<String> conditions = new ArrayList<>();
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("limit", limit);
         if (cursor != null) {
@@ -122,7 +122,7 @@ public class JdbcArticleRepository implements ArticleRepository {
         return query(SELECT_GLOBAL_SQL, conditions, GLOBAL_ORDER_AND_LIMIT_SQL, params);
     }
 
-    private List<ArticleRow> findRowsBySource(ArticleCursor cursor, long sourceId, int limit) {
+    private List<ArticleRow> findRowsBySource(TimeCursor cursor, long sourceId, int limit) {
         List<String> conditions = new ArrayList<>();
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("limit", limit)
@@ -171,8 +171,8 @@ public class JdbcArticleRepository implements ArticleRepository {
                         Collectors.mapping(SourceRow::toArticleSource, Collectors.toList())));
     }
 
-    private void addCursor(MapSqlParameterSource params, ArticleCursor cursor) {
-        params.addValue("publishedAt", toColumnValue(cursor.publishedAt()))
+    private void addCursor(MapSqlParameterSource params, TimeCursor cursor) {
+        params.addValue("publishedAt", toColumnValue(cursor.at()))
                 .addValue("id", cursor.id());
     }
 

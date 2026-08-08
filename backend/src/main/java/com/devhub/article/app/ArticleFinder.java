@@ -1,12 +1,13 @@
 package com.devhub.article.app;
 
-import com.devhub.article.domain.Article;
-import com.devhub.article.domain.ArticleCursor;
-import com.devhub.article.domain.InvalidCursorException;
 import com.devhub.article.app.port.out.ArticleRepository;
+import com.devhub.article.domain.Article;
 import com.devhub.source.app.SourceFinder;
-import com.devhub.article.app.port.out.ArticlePagePolicy;
 import com.devhub.source.domain.UnknownSourceException;
+import com.devhub.support.domain.InvalidCursorException;
+import com.devhub.support.domain.Page;
+import com.devhub.support.domain.PagePolicy;
+import com.devhub.support.domain.TimeCursor;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -17,7 +18,7 @@ public class ArticleFinder {
 
     private final ArticleRepository repository;
     private final SourceFinder sourceFinder;
-    private final ArticlePagePolicy page;
+    private final PagePolicy page;
 
     /**
      * @param cursor 이전 페이지의 nextCursor. 첫 페이지면 null
@@ -26,24 +27,18 @@ public class ArticleFinder {
      * @throws InvalidCursorException 커서를 해석할 수 없으면
      * @throws UnknownSourceException 그 slug를 쓰는 활성 소스가 없으면
      */
-    public ArticlePage findPage(String cursor, String source, Integer limit) {
-        int pageSize = pageSizeOf(limit);
+    public Page<Article> findPage(String cursor, String source, Integer limit) {
+        int pageSize = page.sizeOf(limit);
         List<Article> found = repository.findPage(
-                cursor == null ? null : ArticleCursor.decode(cursor),
+                cursor == null ? null : TimeCursor.decode(cursor),
                 sourceIdOf(source),
                 pageSize + 1);
 
-        if (found.size() <= pageSize) {
-            return new ArticlePage(List.copyOf(found), null);
-        }
-        List<Article> items = List.copyOf(found.subList(0, pageSize));
-        return new ArticlePage(items, ArticleCursor.of(items.getLast()).encode());
+        return Page.of(found, pageSize, ArticleFinder::cursorOf);
     }
 
-    private int pageSizeOf(Integer limit) {
-        return limit == null
-                ? page.defaultSize()
-                : Math.clamp(limit, page.minSize(), page.maxSize());
+    private static String cursorOf(Article article) {
+        return new TimeCursor(article.publishedAt(), article.id()).encode();
     }
 
     private Long sourceIdOf(String slug) {
