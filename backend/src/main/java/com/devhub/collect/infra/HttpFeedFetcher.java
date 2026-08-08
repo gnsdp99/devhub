@@ -23,9 +23,6 @@ import org.springframework.web.client.RestClientException;
 @Component
 public class HttpFeedFetcher implements FeedFetcher {
 
-    private static final String USER_AGENT =
-            "devhub-feed-collector/1.0 (+https://github.com/gnsdp99/devhub)";
-
     private final RestClient restClient;
     private final FeedAddressPolicy addressPolicy;
     private final FeedHttpProperties http;
@@ -74,7 +71,7 @@ public class HttpFeedFetcher implements FeedFetcher {
         try {
             return restClient.get()
                     .uri(uri)
-                    .header(HttpHeaders.USER_AGENT, USER_AGENT)
+                    .header(HttpHeaders.USER_AGENT, http.userAgent())
                     .header(HttpHeaders.ACCEPT_ENCODING, "gzip")
                     .headers(headers -> {
                         if (etag != null) {

@@ -33,6 +33,8 @@ class FeedFetcherIntegrationTest {
 
     private static final DataSize MAX_BODY_SIZE = DataSize.ofKilobytes(64);
 
+    private static final String USER_AGENT = "devhub-feed-collector/test";
+
     private final HttpFeedFetcher fetcher = fetcherWith(TestAddressPolicyConfig.ALLOW_ALL);
 
     private static HttpFeedFetcher fetcherWith(FeedAddressPolicy addressPolicy) {
@@ -40,7 +42,11 @@ class FeedFetcherIntegrationTest {
                 RestClient.builder(),
                 addressPolicy,
                 new FeedHttpProperties(
-                        Duration.ofSeconds(5), Duration.ofSeconds(10), MAX_BODY_SIZE, 5));
+                        USER_AGENT,
+                        Duration.ofSeconds(5),
+                        Duration.ofSeconds(10),
+                        MAX_BODY_SIZE,
+                        5));
     }
 
     private StubHttpServer server;
@@ -114,7 +120,7 @@ class FeedFetcherIntegrationTest {
     }
 
     @Test
-    @DisplayName("User-Agent로 수집기를 밝힌다")
+    @DisplayName("설정한 User-Agent로 수집기를 밝힌다")
     void sendsUserAgent() {
         AtomicReference<String> sent = new AtomicReference<>();
         String url = server.serve("/feed", exchange -> {
@@ -124,7 +130,7 @@ class FeedFetcherIntegrationTest {
 
         fetcher.fetch(url, null, null);
 
-        assertThat(sent.get()).startsWith("devhub-feed-collector/");
+        assertThat(sent.get()).isEqualTo(USER_AGENT);
     }
 
     @Test
