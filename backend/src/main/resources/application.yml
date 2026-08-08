@@ -24,7 +24,7 @@ spring:
 devhub:
   collect:
     enabled: ${DEVHUB_COLLECT_ENABLED:false}
-    interval: ${DEVHUB_COLLECT_INTERVAL:PT30M}
+    interval: ${DEVHUB_COLLECT_INTERVAL:PT6H}
     execution:
       concurrency: ${DEVHUB_COLLECT_EXECUTION_CONCURRENCY:8}
     http:
