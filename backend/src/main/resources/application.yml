@@ -33,6 +33,7 @@ devhub:
     window: ${DEVHUB_COLLECT_WINDOW:P30D}
     execution:
       concurrency: ${DEVHUB_COLLECT_EXECUTION_CONCURRENCY:8}
+      host-concurrency: ${DEVHUB_COLLECT_EXECUTION_HOST_CONCURRENCY:1}
     http:
       user-agent: "${DEVHUB_COLLECT_HTTP_USER_AGENT:devhub-feed-collector/1.0 (+https://github.com/gnsdp99/devhub)}"
       connect-timeout: ${DEVHUB_COLLECT_HTTP_CONNECT_TIMEOUT:5s}
