@@ -5,6 +5,7 @@ import com.devhub.article.domain.ArticleCursor;
 import com.devhub.article.domain.InvalidCursorException;
 import com.devhub.article.app.port.out.ArticleRepository;
 import com.devhub.source.app.SourceFinder;
+import com.devhub.article.app.port.out.ArticlePagePolicy;
 import com.devhub.source.domain.UnknownSourceException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -14,12 +15,9 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ArticleFinder {
 
-    static final int DEFAULT_LIMIT = 20;
-    static final int MIN_LIMIT = 1;
-    static final int MAX_LIMIT = 50;
-
     private final ArticleRepository repository;
     private final SourceFinder sourceFinder;
+    private final ArticlePagePolicy page;
 
     /**
      * @param cursor 이전 페이지의 nextCursor. 첫 페이지면 null
@@ -43,7 +41,9 @@ public class ArticleFinder {
     }
 
     private int pageSizeOf(Integer limit) {
-        return limit == null ? DEFAULT_LIMIT : Math.clamp(limit, MIN_LIMIT, MAX_LIMIT);
+        return limit == null
+                ? page.defaultSize()
+                : Math.clamp(limit, page.minSize(), page.maxSize());
     }
 
     private Long sourceIdOf(String slug) {

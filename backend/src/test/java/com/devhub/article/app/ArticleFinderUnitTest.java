@@ -1,8 +1,5 @@
 package com.devhub.article.app;
 
-import static com.devhub.article.app.ArticleFinder.DEFAULT_LIMIT;
-import static com.devhub.article.app.ArticleFinder.MAX_LIMIT;
-import static com.devhub.article.app.ArticleFinder.MIN_LIMIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -14,6 +11,7 @@ import com.devhub.article.domain.Article;
 import com.devhub.article.domain.ArticleCursor;
 import com.devhub.article.domain.ArticleSource;
 import com.devhub.article.domain.InvalidCursorException;
+import com.devhub.article.app.port.out.ArticlePagePolicy;
 import com.devhub.article.app.port.out.ArticleRepository;
 import com.devhub.source.app.SourceFinder;
 import com.devhub.source.domain.UnknownSourceException;
@@ -36,6 +34,10 @@ class ArticleFinderUnitTest {
     private static final String SOURCE = "cloudflare";
     private static final String SOURCE_NAME = "Hacker News";
 
+    private static final int DEFAULT_LIMIT = 20;
+    private static final int MIN_LIMIT = 1;
+    private static final int MAX_LIMIT = 50;
+
     @Mock
     private ArticleRepository repository;
 
@@ -46,7 +48,10 @@ class ArticleFinderUnitTest {
 
     @BeforeEach
     void setUp() {
-        finder = new ArticleFinder(repository, sourceFinder);
+        finder = new ArticleFinder(
+                repository,
+                sourceFinder,
+                new FixedPagePolicy(DEFAULT_LIMIT, MIN_LIMIT, MAX_LIMIT));
     }
 
     @Nested
@@ -178,5 +183,9 @@ class ArticleFinderUnitTest {
                 .toList();
         given(repository.findPage(any(), any(), anyInt())).willReturn(articles);
         return articles;
+    }
+
+    private record FixedPagePolicy(int defaultSize, int minSize, int maxSize)
+            implements ArticlePagePolicy {
     }
 }

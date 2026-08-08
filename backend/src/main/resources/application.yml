@@ -22,6 +22,11 @@ spring:
     enabled: true
 
 devhub:
+  article:
+    page:
+      default-size: ${DEVHUB_ARTICLE_PAGE_DEFAULT_SIZE:20}
+      min-size: ${DEVHUB_ARTICLE_PAGE_MIN_SIZE:1}
+      max-size: ${DEVHUB_ARTICLE_PAGE_MAX_SIZE:50}
   collect:
     enabled: ${DEVHUB_COLLECT_ENABLED:false}
     interval: ${DEVHUB_COLLECT_INTERVAL:PT6H}
