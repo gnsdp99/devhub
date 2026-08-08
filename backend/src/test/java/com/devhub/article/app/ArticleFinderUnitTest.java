@@ -12,7 +12,7 @@ import com.devhub.support.domain.TimeCursor;
 import com.devhub.article.domain.ArticleSource;
 import com.devhub.support.domain.InvalidCursorException;
 import com.devhub.support.domain.Page;
-import com.devhub.article.app.port.out.ArticlePagePolicy;
+import com.devhub.support.domain.PagePolicy;
 import com.devhub.article.app.port.out.ArticleRepository;
 import com.devhub.source.app.SourceFinder;
 import com.devhub.source.domain.UnknownSourceException;
@@ -60,27 +60,11 @@ class ArticleFinderUnitTest {
     class PageSize {
 
         @Test
-        @DisplayName("limit이 없으면 기본값만큼 가져온다")
-        void fallsBackToTheDefaultLimit() {
-            finder.findPage(null, null, null);
-
-            then(repository).should().findPage(null, null, DEFAULT_LIMIT + 1);
-        }
-
-        @Test
-        @DisplayName("상한보다 큰 limit은 상한까지만 가져온다")
-        void capsTheLimitAtTheMaximum() {
+        @DisplayName("정책이 정한 크기보다 하나 더 조회한다")
+        void queriesOneMoreRowThanThePolicyAllows() {
             finder.findPage(null, null, 1000);
 
             then(repository).should().findPage(null, null, MAX_LIMIT + 1);
-        }
-
-        @Test
-        @DisplayName("0 이하인 limit은 하한까지 올린다")
-        void raisesANonPositiveLimitToTheMinimum() {
-            finder.findPage(null, null, 0);
-
-            then(repository).should().findPage(null, null, MIN_LIMIT + 1);
         }
     }
 
@@ -175,6 +159,6 @@ class ArticleFinderUnitTest {
     }
 
     private record FixedPagePolicy(int defaultSize, int minSize, int maxSize)
-            implements ArticlePagePolicy {
+            implements PagePolicy {
     }
 }

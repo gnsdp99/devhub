@@ -1,12 +1,12 @@
 package com.devhub.article.app;
 
-import com.devhub.article.app.port.out.ArticlePagePolicy;
 import com.devhub.article.app.port.out.ArticleRepository;
 import com.devhub.article.domain.Article;
 import com.devhub.source.app.SourceFinder;
 import com.devhub.source.domain.UnknownSourceException;
 import com.devhub.support.domain.InvalidCursorException;
 import com.devhub.support.domain.Page;
+import com.devhub.support.domain.PagePolicy;
 import com.devhub.support.domain.TimeCursor;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ public class ArticleFinder {
 
     private final ArticleRepository repository;
     private final SourceFinder sourceFinder;
-    private final ArticlePagePolicy page;
+    private final PagePolicy page;
 
     /**
      * @param cursor 이전 페이지의 nextCursor. 첫 페이지면 null
@@ -28,7 +28,7 @@ public class ArticleFinder {
      * @throws UnknownSourceException 그 slug를 쓰는 활성 소스가 없으면
      */
     public Page<Article> findPage(String cursor, String source, Integer limit) {
-        int pageSize = pageSizeOf(limit);
+        int pageSize = page.sizeOf(limit);
         List<Article> found = repository.findPage(
                 cursor == null ? null : TimeCursor.decode(cursor),
                 sourceIdOf(source),
@@ -39,12 +39,6 @@ public class ArticleFinder {
 
     private static String cursorOf(Article article) {
         return new TimeCursor(article.publishedAt(), article.id()).encode();
-    }
-
-    private int pageSizeOf(Integer limit) {
-        return limit == null
-                ? page.defaultSize()
-                : Math.clamp(limit, page.minSize(), page.maxSize());
     }
 
     private Long sourceIdOf(String slug) {
